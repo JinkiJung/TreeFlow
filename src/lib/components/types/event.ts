@@ -2,6 +2,7 @@ export const isMouseEvent = (event: MouseEvent | TouchEvent): event is MouseEven
 
 export const getEventPosition = (event: MouseEvent | TouchEvent, bounds?: DOMRect) => {
     const isMouse = isMouseEvent(event);
+    console.log(event);
     const evtX = isMouse ? event.clientX : event.touches?.[0].clientX;
     const evtY = isMouse ? event.clientY : event.touches?.[0].clientY;
   

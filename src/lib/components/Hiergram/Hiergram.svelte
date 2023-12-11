@@ -1,24 +1,38 @@
 <script lang="ts">
+	import { onMount } from "svelte";
 	import Canvas from "../Canvas/Canvas.svelte";
 	import EdgeCanvas from "../Canvas/EdgeCanvas.svelte";
 	import NodeCanvas from "../Canvas/NodeCanvas.svelte";
 	import { Edge } from "../Edge";
 	import DefaultNode from "../Node/DefaultNode.svelte";
-	import { nodes } from "../stores";
-	import { getEventPosition, type NodeData } from "../types";
+	import { edgeStore, nodeStore } from "../stores";
+	import { getEventPosition, type EdgeData, type NodeData } from "../types";
+	import { updateAllEdgeEndpoints } from "../types/dom";
     import type { HiergramProps } from "./types";
 
-    type $$Props = HiergramProps;
-
-    export let id: $$Props['id'] = '1';
-    export let nodesProp: $$Props['nodesProp'];
-    export let edges: $$Props['edges'];
+    //type $$Props = HiergramProps;
     
-	let nodeData: NodeData[];
+	let nodes: NodeData[];
+	let edges: EdgeData[];
 
-	nodes.subscribe((value) => {
-		nodeData = value;
+	nodeStore.subscribe((value) => {
+		nodes = value;
+		if (edges && edges.length) {
+			const updated = updateAllEdgeEndpoints(edges, nodes);
+			edgeStore.set(updated);
+		}
 	});
+
+	edgeStore.subscribe((value) => {
+		edges = value;
+	});
+
+	onMount(() => {
+        if (edges && nodes) {
+            const updated = updateAllEdgeEndpoints(edges, nodes);
+			edgeStore.set(updated);
+        }
+    });
 
 	let selectedNodeIds: string[] = [];
 
@@ -45,9 +59,9 @@
 
 	const handleMousemove = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		if (drag && selectedNodeIds.length) {
-			let selected: NodeData = nodesProp.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
+			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			let pos = getEventPosition(e.detail.event);
-			nodes.set(nodesProp.map((node) => {
+			nodeStore.set(nodes.map((node) => {
 				if (selected.id === node.id) {
 					return {
 						...node,
@@ -76,17 +90,18 @@
 
 	const handleMouseup = () => {
 		drag = false;
+
 	}
 </script>
 <div>
     <Canvas width={600} height={400}>
         <EdgeCanvas>
             {#each edges as edge}
-                <Edge id={edge.id} from={edge.from} to={edge.to} />
+                <Edge edge={edge} />
             {/each}
         </EdgeCanvas>
         <NodeCanvas>
-            {#each nodeData as node}
+            {#each nodes as node}
                 <DefaultNode node = {node}
 					on:nodeclick={handleNodeClick}
 					on:nodedragstart={handleMousedown}

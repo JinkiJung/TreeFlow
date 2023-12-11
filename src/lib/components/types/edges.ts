@@ -1,8 +1,10 @@
 import type { Size, XYPosition } from ".";
 
-export type Edge<T = any> = {
+export type EdgeData<T = any> = {
     id: string;
-    from: string;
-    to: string;
+    fromId: string;
+    toId: string;
+    from?: XYPosition;
+    to?: XYPosition;
     data: T;
 }

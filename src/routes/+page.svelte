@@ -3,14 +3,14 @@
 	import Canvas from '$lib/components/Canvas/Canvas.svelte';
 	import Hiergram from '$lib/components/Hiergram/Hiergram.svelte';
 	import { writable } from 'svelte/store';
-	import type { NodeData, Edge } from '$lib/components/types';
-	import { nodes } from '$lib/components/stores';
+	import type { NodeData, EdgeData } from '$lib/components/types';
+	import { edgeStore, nodeStore } from '$lib/components/stores';
 
-	let edgeItems: Edge[]= [
+	let edgeItems: EdgeData[]= [
 		{
 			id: 'edge1',
-			from: 'node1',
-			to: 'node2',
+			fromId: 'node1',
+			toId: 'node2',
 			data: {
 				label: 'edge 1',
 			}
@@ -46,7 +46,8 @@
 			}
         }
     ] as NodeData[];
-	nodes.set(nodeItems);
+	nodeStore.set(nodeItems);
+	edgeStore.set(edgeItems);
 </script>
 
 <svelte:head>
@@ -63,7 +64,7 @@
 		Hieragram Svelte Demo
 	</h1>
 
-	<Hiergram nodesProp={nodeItems} edges={edgeItems}/>
+	<Hiergram />
 </section>
 
 <style>

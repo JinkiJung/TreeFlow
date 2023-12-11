@@ -28,3 +28,8 @@ export type NodeDragItem = {
     dragging?: boolean;
     expandParent?: boolean;
   };
+
+export enum NodeEndpointTypes {
+    Start = 'start',
+    End = 'end',
+};

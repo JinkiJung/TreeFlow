@@ -1,14 +1,29 @@
 <script lang='ts'>
     import { onMount } from 'svelte';
-    export let id = '';
-    export let from = '';
-    export let to = '';
-    export let data = {};
+	import type { EdgeData } from '../types';
     
+    export let edge: EdgeData;
+    
+    let x1 = edge.from?.x!;
+    let y1 = edge.from?.y!;
+    let x2 = edge.to?.x!;
+    let y2 = edge.to?.y!;
+
+    $: {
+        x1 = edge.from?.x!;
+        y1 = edge.from?.y!;
+        x2 = edge.to?.x!;
+        y2 = edge.to?.y!;
+        if (path && edge.from && edge.to) {
+            path.setAttribute('d', getBezierPath(x1, y1, x2, y2));
+        }
+    }
     let path: any;
 
     onMount(() => {
-        path.setAttribute('d', getBezierPath(100, 100, 200, 200));
+        if (edge.from && edge.to) {
+            path.setAttribute('d', getBezierPath(x2, y2, x1, y1));
+        }
     });
     
     const getBezierPath = (x4: number, y4: number, x1: number, y1: number) => {    

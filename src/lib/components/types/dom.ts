@@ -56,3 +56,9 @@ export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): Ed
   }
   return edges;
 };
+
+export const pauseEvent = (event: MouseEvent | TouchEvent) => {
+  if(event.stopPropagation) event.stopPropagation();
+  if(event.preventDefault) event.preventDefault();
+  return false;
+}

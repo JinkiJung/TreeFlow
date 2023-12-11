@@ -7,7 +7,7 @@
 	import DefaultNode from "../Node/DefaultNode.svelte";
 	import { edgeStore, nodeStore } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData } from "../types";
-	import { updateAllEdgeEndpoints } from "../types/dom";
+	import { pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
     import type { HiergramProps } from "./types";
 
     //type $$Props = HiergramProps;
@@ -41,6 +41,7 @@
 	let drag = false;
 
 	const handleMousedown = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
+		pauseEvent(e.detail.event);
 		drag = true;
 		selectNode(e.detail.node);
 		let selected = e.detail.node;
@@ -58,6 +59,7 @@
 	}
 
 	const handleMousemove = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
+		pauseEvent(e.detail.event);
 		if (drag && selectedNodeIds.length) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			let pos = getEventPosition(e.detail.event);

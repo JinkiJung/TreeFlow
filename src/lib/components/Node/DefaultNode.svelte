@@ -7,7 +7,7 @@
 		nodeclick: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodecontextmenu: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodedrag: { node: NodeData; nodes: NodeData[]; event: MouseEvent | TouchEvent };
-		nodedragstart: { node: NodeData; nodes: NodeData[]; event: MouseEvent | TouchEvent };
+		nodedragstart: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodedragstop: { node: NodeData; nodes: NodeData[]; event: MouseEvent | TouchEvent };
 		nodemouseenter: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemouseleave: { node: NodeData; event: MouseEvent | TouchEvent };
@@ -27,6 +27,15 @@
 	let height = node.size.height;
 	let data = node.data;
 	let selected = node.selected;
+
+	$: {
+		x = node.position.x;
+		y = node.position.y;
+		width = node.size.width;
+		height = node.size.height;
+		data = node.data;
+		selected = node.selected;
+	}
 
 </script>
 

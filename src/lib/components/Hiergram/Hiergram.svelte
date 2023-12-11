@@ -18,31 +18,32 @@
 
 	nodes.subscribe((value) => {
 		nodeData = value;
-		console.log(nodeData);
 	});
-
-	
 
 	let selectedNodeIds: string[] = [];
 
-	$: {
-		
-	}
 	let offsetX = 0;
 	let offsetY = 0;
 	let drag = false;
 
-	function handleMousedown(event: MouseEvent | TouchEvent) {
+	const handleMousedown = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		drag = true;
+		selectNode(e.detail.node);
+		let selected = e.detail.node;
+		let pos = getEventPosition(e.detail.event);
+		offsetX = pos.x - selected.position.x;
+		offsetY = pos.y - selected.position.y;
+		/*
 		if (selectedNodeIds.length) {
 			let selected: NodeData = nodesProp.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
-			let pos = getEventPosition(event);
+			let pos = getEventPosition(e.detail.event);
 			offsetX = pos.x - selected.position.x;
 			offsetY = pos.y - selected.position.y;
 		}
+		*/
 	}
 
-	function handleMousemove(e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) {
+	const handleMousemove = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		if (drag && selectedNodeIds.length) {
 			let selected: NodeData = nodesProp.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			let pos = getEventPosition(e.detail.event);
@@ -61,16 +62,19 @@
 		}
 	}
 
-	function handleNodeClick(e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) {
-		if(selectedNodeIds.length && selectedNodeIds[0] === e.detail.node.id) {
-			selectedNodeIds = [];
-		} else {
-			selectedNodeIds = [e.detail.node.id!];
-		}
-		console.log(selectedNodeIds);
+	const handleNodeClick = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
+		//selectNode(e.detail.node);
 	}
 
-	function handleMouseup() {
+	const selectNode = (node: NodeData) => {
+		if(selectedNodeIds.length && selectedNodeIds[0] === node.id) {
+			selectedNodeIds = [];
+		} else {
+			selectedNodeIds = [node.id!];
+		}
+	};
+
+	const handleMouseup = () => {
 		drag = false;
 	}
 </script>
@@ -81,7 +85,7 @@
                 <Edge id={edge.id} from={edge.from} to={edge.to} />
             {/each}
         </EdgeCanvas>
-        <NodeCanvas handleMousedown={handleMousedown}>
+        <NodeCanvas>
             {#each nodeData as node}
                 <DefaultNode node = {node}
 					on:nodeclick={handleNodeClick}

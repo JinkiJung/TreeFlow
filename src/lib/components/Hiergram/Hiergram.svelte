@@ -6,7 +6,7 @@
 	import { Edge } from "../Edge";
 	import DefaultNode from "../Node/DefaultNode.svelte";
 	import { edgeStore, nodeStore } from "../stores";
-	import { getEventPosition, type EdgeData, type NodeData } from "../types";
+	import { getEventPosition, type EdgeData, type NodeData, type XYPosition } from "../types";
 	import { pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
     import type { HiergramProps } from "./types";
 
@@ -40,6 +40,8 @@
 	let offsetY = 0;
 	let drag = false;
 
+	let dragStart: XYPosition = { x: 0, y: 0 };
+
 	const handleMousedown = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		pauseEvent(e.detail.event);
 		drag = true;
@@ -48,21 +50,28 @@
 		let pos = getEventPosition(e.detail.event);
 		offsetX = pos.x - selected.position.x;
 		offsetY = pos.y - selected.position.y;
-		/*
-		if (selectedNodeIds.length) {
-			let selected: NodeData = nodesProp.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
-			let pos = getEventPosition(e.detail.event);
-			offsetX = pos.x - selected.position.x;
-			offsetY = pos.y - selected.position.y;
-		}
-		*/
+		dragStart = pos;
+		document.onmousemove = handleMousemove;
+		document.onmouseleave = handleMouseleave;
 	}
 
-	const handleMousemove = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
-		pauseEvent(e.detail.event);
+	const handleMouseleave = (event: MouseEvent | TouchEvent) => {
+		pauseEvent(event);
+		document.onmousemove = null;
+		document.onmouseenter = handleMouseEnter;
+	}
+
+	const handleMouseEnter = (event: MouseEvent | TouchEvent) => {
+		pauseEvent(event);
+		document.onmousemove = handleMousemove;
+	}
+
+	const handleMousemove = ( event: MouseEvent | TouchEvent) => {
+		pauseEvent(event);
 		if (drag && selectedNodeIds.length) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
-			let pos = getEventPosition(e.detail.event);
+			let pos = getEventPosition(event);
+			
 			nodeStore.set(nodes.map((node) => {
 				if (selected.id === node.id) {
 					return {
@@ -83,16 +92,15 @@
 	}
 
 	const selectNode = (node: NodeData) => {
-		if(selectedNodeIds.length && selectedNodeIds[0] === node.id) {
-			selectedNodeIds = [];
-		} else {
-			selectedNodeIds = [node.id!];
-		}
+		selectedNodeIds = [node.id!];
 	};
 
 	const handleMouseup = () => {
 		drag = false;
-
+		document.onmousemove = null;
+		document.onmouseleave = null;
+		document.onmouseenter = null;
+		selectedNodeIds = [];
 	}
 </script>
 <div>
@@ -104,11 +112,10 @@
         </EdgeCanvas>
         <NodeCanvas>
             {#each nodes as node}
-                <DefaultNode node = {node}
-					on:nodeclick={handleNodeClick}
-					on:nodedragstart={handleMousedown}
-					on:nodedragstop={handleMouseup}
-					on:nodemousemove={handleMousemove}
+                <DefaultNode node = {node} 
+				selected={selectedNodeIds.includes(node.id)}
+				on:nodedragstart={handleMousedown}
+				on:nodedragstop={handleMouseup}
 					/>
             {/each}
         </NodeCanvas>

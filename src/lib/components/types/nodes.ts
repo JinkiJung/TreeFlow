@@ -29,7 +29,7 @@ export type NodeDragItem = {
     expandParent?: boolean;
   };
 
-export enum NodeEndpointTypes {
+export enum EdgeLinkTypes {
     Start = 'start',
     End = 'end',
 };

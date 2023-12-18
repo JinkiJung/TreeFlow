@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { NodeData } from '../types';
-	import { endpointSize, nodeStore } from '../stores';
+	import { EdgeLinkTypes, type EdgeData, type NodeData } from '../types';
+	import { edgelinkSize, nodeStore } from '../stores';
+	import EdgeLinker from '../EdgeLinker/EdgeLinker.svelte';
+	import { pauseEvent } from '../types/dom';
+	import BezierEdge from '../Edge/BezierEdge.svelte';
 	
 	const dispatch = createEventDispatcher<{
 		nodeclick: { node: NodeData; event: MouseEvent | TouchEvent };
@@ -16,6 +19,8 @@
 
 	export let node: NodeData;
 	export let selected: boolean = false;
+	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
+    export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 
 	function onSelectNodeHandler(event: MouseEvent | TouchEvent) {
 		dispatch('nodeclick', { node, event });
@@ -54,9 +59,13 @@
 	tabindex="0"
 >
 	<div class="d-flex justify-content-between">
-		<div class="p-0" style="width: {endpointSize}px; height: {endpointSize}px; border: 1px solid black;">
-			Start
-		</div>
+		<EdgeLinker
+			endpointSize={edgelinkSize}
+			node={node}
+			type={EdgeLinkTypes.Start}
+			on:edgelinkstart={edgeLinkStart}
+			on:edgelinkend={edgeLinkEnd}
+			/>
 		<div></div>
 	</div>
 	<div>
@@ -71,9 +80,13 @@
 		<div>
 
 		</div>
-		<div style="width: {endpointSize}px; height: {endpointSize}px; border: 1px solid black;">
-			End
-		</div>
+		<EdgeLinker
+			endpointSize={edgelinkSize}
+			node={node}
+			type={EdgeLinkTypes.End}
+			on:edgelinkstart={edgeLinkStart}
+			on:edgelinkend={edgeLinkEnd}
+			/>
 	</div>
 </div>
 

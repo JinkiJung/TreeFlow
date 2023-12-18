@@ -1,5 +1,5 @@
-import { NodeEndpointTypes, type NodeData, type EdgeData } from ".";
-import { endpointSize } from "../stores";
+import { EdgeLinkTypes, type NodeData, type EdgeData } from ".";
+import { edgelinkSize } from "../stores";
 
 export const isMouseEvent = (event: MouseEvent | TouchEvent): event is MouseEvent => 'clientX' in event;
 
@@ -14,16 +14,16 @@ export const getEventPosition = (event: MouseEvent | TouchEvent, bounds?: DOMRec
   };
 };
 
-export const getEdgeEndpoint = (node: NodeData, type: NodeEndpointTypes) => {
-  if (type === NodeEndpointTypes.Start) {
+export const getEdgeEndpoint = (node: NodeData, type: EdgeLinkTypes) => {
+  if (type === EdgeLinkTypes.Start) {
     return {
-      x: node.position.x + endpointSize / 2,
-      y: node.position.y + endpointSize / 2,
+      x: node.position.x + edgelinkSize / 2,
+      y: node.position.y + edgelinkSize / 2,
     };
-  } else if (type === NodeEndpointTypes.End) {
+  } else if (type === EdgeLinkTypes.End) {
     return {
-      x: node.position.x + node.size.width - endpointSize / 2,
-      y: node.position.y + node.size.height - endpointSize / 2,
+      x: node.position.x + node.size.width - edgelinkSize / 2,
+      y: node.position.y + node.size.height - edgelinkSize / 2,
     };
   } else {
     return {
@@ -41,7 +41,7 @@ export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): Ed
     if (edge.fromId) {
       const node = nodes.find((n) => n.id === edge.fromId);
       if (node) {
-        const endpoint = getEdgeEndpoint(node, NodeEndpointTypes.End);
+        const endpoint = getEdgeEndpoint(node, EdgeLinkTypes.End);
         edge.from = endpoint;
       }
     }
@@ -49,7 +49,7 @@ export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): Ed
     if (edge.toId) {
       const node = nodes.find((n) => n.id === edge.toId);
       if (node) {
-        const endpoint = getEdgeEndpoint(node, NodeEndpointTypes.Start);
+        const endpoint = getEdgeEndpoint(node, EdgeLinkTypes.Start);
         edge.to = endpoint;
       }
     }

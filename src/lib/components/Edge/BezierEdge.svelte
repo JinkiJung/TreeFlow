@@ -1,6 +1,6 @@
 <script lang='ts'>
     import { onMount } from 'svelte';
-	import type { EdgeData } from '../types';
+	import type { EdgeData, XYPosition } from '../types';
     
     export let edge: EdgeData;
     
@@ -14,6 +14,7 @@
         y1 = edge.from?.y!;
         x2 = edge.to?.x!;
         y2 = edge.to?.y!;
+        
         if (path && edge.from && edge.to) {
             path.setAttribute('d', getBezierPath(x1, y1, x2, y2));
         }

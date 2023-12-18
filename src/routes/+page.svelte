@@ -1,6 +1,5 @@
 
 <script lang='ts'>
-	import Canvas from '$lib/components/Canvas/Canvas.svelte';
 	import Hiergram from '$lib/components/Hiergram/Hiergram.svelte';
 	import { writable } from 'svelte/store';
 	import type { NodeData, EdgeData } from '$lib/components/types';
@@ -64,7 +63,7 @@
 		Hieragram Svelte Demo
 	</h1>
 
-	<Hiergram />
+	<Hiergram width={600} height={400}/>
 </section>
 
 <style>

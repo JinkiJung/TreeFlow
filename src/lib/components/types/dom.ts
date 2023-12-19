@@ -38,18 +38,18 @@ export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): Ed
 
     /* TODO: need to deal with situations when it is undefined
     */ 
-    if (edge.fromId) {
+    if (edge.fromId && edge.fromType) {
       const node = nodes.find((n) => n.id === edge.fromId);
       if (node) {
-        const endpoint = getEdgeEndpoint(node, EdgeLinkTypes.End);
+        const endpoint = getEdgeEndpoint(node, edge.fromType);
         edge.from = endpoint;
       }
     }
 
-    if (edge.toId) {
+    if (edge.toId && edge.toType) {
       const node = nodes.find((n) => n.id === edge.toId);
       if (node) {
-        const endpoint = getEdgeEndpoint(node, EdgeLinkTypes.Start);
+        const endpoint = getEdgeEndpoint(node, edge.toType);
         edge.to = endpoint;
       }
     }

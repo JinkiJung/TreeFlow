@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import EdgeCanvas from "../Canvas/EdgeCanvas.svelte";
 	import NodeCanvas from "../Canvas/NodeCanvas.svelte";
 	import { Edge } from "../Edge";
 	import DefaultNode from "../Node/DefaultNode.svelte";
 	import { edgeStore, edgelinkSize, nodeStore } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes } from "../types";
-	import { pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
+	import { getEdgeEndpoint, pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
     import type { HiergramProps } from "./types";
-	import BezierEdge from "../Edge/BezierEdge.svelte";
 
     //type $$Props = HiergramProps;
     
@@ -20,16 +19,23 @@
 	let nodes: NodeData[];
 	let edges: EdgeData[];
 
-	nodeStore.subscribe((value) => {
+	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
+
+		// TODO: OPTIMIZED: if a node without edge is moved
 		if (edges && edges.length) {
 			const updated = updateAllEdgeEndpoints(edges, nodes);
 			edgeStore.set(updated);
 		}
 	});
 
-	edgeStore.subscribe((value) => {
+	const unsubscribeEdgeStore = edgeStore.subscribe((value) => {
 		edges = value;
+	});
+
+	onDestroy(() => {
+		unsubscribeNodeStore();
+		unsubscribeEdgeStore();
 	});
 
 	onMount(() => {
@@ -45,13 +51,13 @@
 	let offsetX = 0;
 	let offsetY = 0;
 	let drag = false;
+	let newEdgeCandidate: EdgeData | null = null;
 
 	let dragStart: XYPosition = { x: 0, y: 0 };
 
 	const handleMousedown = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		pauseEvent(e.detail.event);
 		containerBounds = container.getBoundingClientRect();
-
 		drag = true;
 		selectNode(e.detail.node);
 		let selected = e.detail.node;
@@ -76,13 +82,9 @@
 		}
 	}
 
-	const handleMousemove = ( event: MouseEvent | TouchEvent) => {
-		pauseEvent(event);
-		containerBounds = container.getBoundingClientRect();
-		if (drag && selectedNodeIds.length) {
+	const updateNodes = (pos: XYPosition) => {
+		if (selectedNodeIds.length) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
-			let pos = getEventPosition(event, containerBounds);
-			
 			nodeStore.set(nodes.map((node) => {
 				if (selected.id === node.id) {
 					return {
@@ -95,12 +97,32 @@
 				}
 				return node;
 			}));
-		} else if (drag && newEdge) {
+		}
+	}
+
+	const updateNewEdge = (pos: XYPosition) => {
+		if (newEdge) {
+			if (newEdge.from) {
+				newEdge.to = {
+					x: pos.x,
+					y: pos.y,
+				};
+			} else {
+				newEdge.from = {
+					x: pos.x,
+					y: pos.y,
+				};
+			}
+		}
+	}
+
+	const handleMousemove = ( event: MouseEvent | TouchEvent) => {
+		pauseEvent(event);
+		if (drag) {
+			containerBounds = container.getBoundingClientRect();
 			let pos = getEventPosition(event, containerBounds);
-			newEdge.to = {
-				x: pos.x,
-				y: pos.y,
-			};
+			updateNodes(pos);
+			updateNewEdge(pos);
 		}
 	}
 
@@ -115,47 +137,96 @@
 		document.onmouseenter = null;
 		selectedNodeIds = [];
 		if (newEdge) {
-			//edgeStore.set([...edges, newEdge]);
 			newEdge = null;
 		}
 	}
 
+	const edgeLinkStart = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+		drag = true;
 
-const edgeLinkStart = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
-	drag = true;
-	//selectNode(e.detail.node);
-	pauseEvent(event.detail.event);
-	containerBounds = container.getBoundingClientRect();
-	newEdge = {
-		id: 'edge1:',
-		fromId: event.detail.node.id,
-		from: {
-			x: event.detail.node.position.x + edgelinkSize / 2,
-			y: event.detail.node.position.y + edgelinkSize / 2,
-		},
-		data: {
-			label: 'edge 1',
+		//selectNode(e.detail.node);
+		pauseEvent(event.detail.event);
+		containerBounds = container.getBoundingClientRect();
+		if (event.detail.type === EdgeLinkTypes.Start) {
+			newEdge = {
+				id: 'new',
+				fromId: event.detail.node.id,
+				fromType: EdgeLinkTypes.Start,
+				from: {
+					... getEdgeEndpoint(event.detail.node, EdgeLinkTypes.Start)
+				},
+				data: {
+					label: 'edge 1',
+				}
+			};	
+		} else {
+			newEdge = {
+				id: 'new',
+				toId: event.detail.node.id,
+				toType: EdgeLinkTypes.End,
+				to: {
+					... getEdgeEndpoint(event.detail.node, EdgeLinkTypes.End)
+				},
+				data: {
+					label: 'edge 1',
+				}
+			};
 		}
-	};
 
-	let pos = getEventPosition(event.detail.event, containerBounds);
-	offsetX = pos.x - event.detail.node.position.x;
-	offsetY = pos.y - event.detail.node.position.y;
+		let pos = getEventPosition(event.detail.event, containerBounds);
+		offsetX = pos.x - event.detail.node.position.x;
+		offsetY = pos.y - event.detail.node.position.y;
 
-	document.onmousemove = handleMousemove;
-	document.onmouseleave = handleMouseleave;
-	document.onmouseup = handleMouseup;
-}
+		document.onmousemove = handleMousemove;
+		document.onmouseleave = handleMouseleave;
+		document.onmouseup = handleMouseup;
+	}
 
-const edgeLinkEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
-	drag = false;
-	//selectNode(e.detail.node);
-	pauseEvent(event.detail.event);
-	document.onmousemove = null;
-	document.onmouseleave = null;
-	document.onmouseenter = null;
-	newEdge = null;
-}
+	const edgeLinkEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+		drag = false;
+		//selectNode(e.detail.node);
+		pauseEvent(event.detail.event);
+		document.onmousemove = null;
+		document.onmouseleave = null;
+		document.onmouseenter = null;
+		newEdge = null;
+		if (newEdgeCandidate) {
+			edgeStore.set([...edges, newEdgeCandidate]);
+			nodeStore.set(nodes);
+			newEdgeCandidate = null;
+		}
+	}
+
+	const edgeLinkEnter = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+		pauseEvent(event.detail.event);
+		if (drag && newEdge) {
+			if (newEdge.fromId !== event.detail.node.id) {
+				if (newEdge.fromId && event.detail.type === EdgeLinkTypes.End) {
+					// assign toId
+					newEdgeCandidate = {
+						...newEdge,
+						id: newEdge.fromId + '-' + event.detail.node.id,
+						toId: event.detail.node.id,
+						toType: EdgeLinkTypes.End,
+						to: {
+							... getEdgeEndpoint(event.detail.node, event.detail.type)
+						}
+					};
+				} else if (newEdge.toId && event.detail.type === EdgeLinkTypes.Start) {
+					// assign fromId
+					newEdgeCandidate = {
+						...newEdge,
+						id: newEdge.fromId + '-' + event.detail.node.id,
+						fromId: event.detail.node.id,
+						fromType: EdgeLinkTypes.Start,
+						from: {
+							... getEdgeEndpoint(event.detail.node, event.detail.type)
+						}
+					};
+				}
+			}
+		}
+	}
 
 </script>
 
@@ -166,7 +237,7 @@ const edgeLinkEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; e
 				<Edge edge={edge} />
 			{/each}
 			{#if newEdge}
-				<BezierEdge edge={newEdge} />
+				<Edge edge={newEdge} />
 			{/if}
 		</EdgeCanvas>
 		<NodeCanvas>
@@ -178,6 +249,7 @@ const edgeLinkEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; e
 					on:nodedragstop={handleMouseup}
 					edgeLinkStart={edgeLinkStart}
 					edgeLinkEnd={edgeLinkEnd}
+					edgeLinkEnter={edgeLinkEnter}
 					/>
 			{/each}
 		</NodeCanvas>  

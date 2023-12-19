@@ -2,13 +2,15 @@
 <script lang='ts'>
 	import Hiergram from '$lib/components/Hiergram/Hiergram.svelte';
 	import { writable } from 'svelte/store';
-	import type { NodeData, EdgeData } from '$lib/components/types';
+	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
 	import { edgeStore, nodeStore } from '$lib/components/stores';
 
 	let edgeItems: EdgeData[]= [
 		{
 			id: 'edge1',
 			fromId: 'node1',
+			fromType: EdgeLinkTypes.End,
+			toType: EdgeLinkTypes.Start,
 			toId: 'node2',
 			data: {
 				label: 'edge 1',
@@ -43,7 +45,21 @@
 			data: {
 				label: 'node 2',
 			}
-        }
+        },
+		{
+            id: 'node3',
+            position: {
+				x: 400,
+				y: 200,
+			},
+			size: {
+				width: 160,
+				height: 60,
+			},
+			data: {
+				label: 'node 3',
+			}
+        },
     ] as NodeData[];
 	nodeStore.set(nodeItems);
 	edgeStore.set(edgeItems);

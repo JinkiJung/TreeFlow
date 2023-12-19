@@ -21,6 +21,7 @@
 	export let selected: boolean = false;
 	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
     export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
+	export let edgeLinkEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 
 	function onSelectNodeHandler(event: MouseEvent | TouchEvent) {
 		dispatch('nodeclick', { node, event });
@@ -65,6 +66,7 @@
 			type={EdgeLinkTypes.Start}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
+			on:edgelinkenter={edgeLinkEnter}
 			/>
 		<div></div>
 	</div>
@@ -86,6 +88,7 @@
 			type={EdgeLinkTypes.End}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
+			on:edgelinkenter={edgeLinkEnter}
 			/>
 	</div>
 </div>

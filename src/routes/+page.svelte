@@ -5,6 +5,7 @@
 	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
 	import { edgeStore, nodeStore } from '$lib/components/stores';
 
+	let hiergram: Hiergram;
 	let edgeItems: EdgeData[]= [
 		{
 			id: 'edge1',
@@ -78,8 +79,12 @@
 
 		Hieragram Svelte Demo
 	</h1>
-
-	<Hiergram width={600} height={400}/>
+	<div class="container" >
+		<Hiergram bind:this={hiergram} width={600} height={400}/>
+		<button on:click={(e) => hiergram.addNode()}
+		>create new</button>
+	</div>
+	
 </section>
 
 <style>

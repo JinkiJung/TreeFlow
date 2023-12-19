@@ -61,8 +61,8 @@
 >
 	<div class="d-flex justify-content-between">
 		<EdgeLinker
-			endpointSize={edgelinkSize}
-			node={node}
+			{edgelinkSize}
+			{node}
 			type={EdgeLinkTypes.Start}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
@@ -83,8 +83,8 @@
 
 		</div>
 		<EdgeLinker
-			endpointSize={edgelinkSize}
-			node={node}
+			{edgelinkSize}
+			{node}
 			type={EdgeLinkTypes.End}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}

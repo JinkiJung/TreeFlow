@@ -18,6 +18,19 @@
 	let containerBounds: DOMRect | null = null;
 	let nodes: NodeData[];
 	let edges: EdgeData[];
+	let newNodeTemplate: NodeData = {
+		position: {
+			x: 0,
+			y: 0,
+		},
+		size: {
+			width: 160,
+			height: 60,
+		},
+		data: {
+			label: 'node',
+		}
+	};
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
@@ -228,6 +241,17 @@
 		}
 	}
 
+	export const addNode = () => {
+		nodeStore.set([...nodes, 
+		{...newNodeTemplate,
+			id: 'node' + (nodes.length + 1),
+			data: {
+				label: 'node ' + (nodes.length + 1),
+			}
+		}]);
+		console.log('addNode', nodes);
+	}
+
 </script>
 
 <div>
@@ -243,13 +267,13 @@
 		<NodeCanvas>
 			{#each nodes as node}
 				<DefaultNode 
-					node = {node} 
+					{node} 
 					selected={selectedNodeIds.includes(node.id)}
 					on:nodedragstart={handleMousedown}
 					on:nodedragstop={handleMouseup}
-					edgeLinkStart={edgeLinkStart}
-					edgeLinkEnd={edgeLinkEnd}
-					edgeLinkEnter={edgeLinkEnter}
+					{edgeLinkStart}
+					{edgeLinkEnd}
+					{edgeLinkEnter}
 					/>
 			{/each}
 		</NodeCanvas>  

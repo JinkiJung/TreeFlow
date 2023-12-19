@@ -2,7 +2,7 @@
     import { createEventDispatcher } from 'svelte';
 	import { EdgeLinkTypes, type NodeData } from "../types";
 
-    export let endpointSize: number = 0;
+    export let edgelinkSize: number = 0;
     export let node: NodeData;
     export let type: EdgeLinkTypes = EdgeLinkTypes.Start;
 
@@ -15,7 +15,7 @@
 
 <div class="p-0"
     role="button"
-    style="width: {endpointSize}px; height: {endpointSize}px; border: 1px solid black;"
+    style="width: {edgelinkSize}px; height: {edgelinkSize}px; border: 1px solid black;"
     on:mousedown={(event) => dispatch('edgelinkstart', { node, type, event })}
     on:mouseup={(event) => dispatch('edgelinkend', { node, type, event })}
     on:mouseenter={(event) => dispatch('edgelinkenter', { node, type, event })}

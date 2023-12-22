@@ -62,3 +62,12 @@ export const pauseEvent = (event: MouseEvent | TouchEvent) => {
   if(event.preventDefault) event.preventDefault();
   return false;
 }
+
+export const isRightMB = (event: MouseEvent) => {
+  let isRightCheck = false;
+  if ("which" in event)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+    isRightCheck = event.which == 3; 
+  else if ("button" in event)  // IE, Opera 
+    isRightCheck = event.button == 2; 
+  return isRightCheck;
+}

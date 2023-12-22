@@ -5,13 +5,15 @@
 	import EdgeLinker from '../EdgeLinker/EdgeLinker.svelte';
 	import { pauseEvent } from '../types/dom';
 	import BezierEdge from '../Edge/BezierEdge.svelte';
+	import NodeCanvas from '../Canvas/NodeCanvas.svelte';
+	import { DefaultNode } from '.';
 	
 	const dispatch = createEventDispatcher<{
 		nodeclick: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodecontextmenu: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodedrag: { node: NodeData; nodes: NodeData[]; event: MouseEvent | TouchEvent };
 		nodedragstart: { node: NodeData; event: MouseEvent | TouchEvent };
-		nodedragstop: { node: NodeData; nodes: NodeData[]; event: MouseEvent | TouchEvent };
+		nodedragstop: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemouseenter: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemouseleave: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemousemove: { node: NodeData; event: MouseEvent | TouchEvent };
@@ -22,6 +24,8 @@
 	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
     export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 	export let edgeLinkEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
+	export let handleMousedown: (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => void;
+	export let handleMouseup: (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => void;
 
 	function onSelectNodeHandler(event: MouseEvent | TouchEvent) {
 		dispatch('nodeclick', { node, event });
@@ -33,6 +37,7 @@
 	let width = node.size.width;
 	let height = node.size.height;
 	let data = node.data;
+	let children = node.children;
 
 	$: {
 		x = node.position.x;
@@ -40,6 +45,7 @@
 		width = node.size.width;
 		height = node.size.height;
 		data = node.data;
+		children = node.children;
 	}
 
 </script>
@@ -52,7 +58,7 @@
 	on:click={(event) => dispatch('nodeclick', { node, event })}
 	on:keydown={(event) => {}}
 	on:mousedown={(event) => dispatch('nodedragstart', { node, event })}
-	on:mouseup={(event) => dispatch('nodedragstop', { node, nodes: [node], event })}
+	on:mouseup={(event) => dispatch('nodedragstop', { node, event })}
 	on:mouseenter={(event) => dispatch('nodemouseenter', { node, event })}
 	on:mouseleave={(event) => dispatch('nodemouseleave', { node, event })}
 	on:mousemove={(event) => dispatch('nodemousemove', { node, event })}
@@ -77,6 +83,22 @@
 		style="width: 100%; height: 20px; border: 0px solid black;"
 		value={data.label ? data.label : ''}
 	/>
+	</div>
+	<div class="d-flex justify-content-between">
+		<NodeCanvas backgroundColor={"gray"}>
+			{#each children || [] as node}
+				<DefaultNode 
+					{node} 
+					on:nodedragstart={handleMousedown}
+					on:nodedragstop={handleMouseup}
+					{edgeLinkStart}
+					{edgeLinkEnd}
+					{edgeLinkEnter}
+					handleMousedown={handleMousedown}
+					handleMouseup={handleMouseup}
+					/>
+			{/each}
+		</NodeCanvas>
 	</div>
 	<div class="d-flex justify-content-between">
 		<div>

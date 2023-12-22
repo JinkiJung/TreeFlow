@@ -6,7 +6,7 @@
 	import DefaultNode from "../Node/DefaultNode.svelte";
 	import { edgeStore, edgelinkSize, nodeStore } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes } from "../types";
-	import { getEdgeEndpoint, pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
+	import { getEdgeEndpoint, isRightMB, pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
     import type { HiergramProps } from "./types";
 
     //type $$Props = HiergramProps;
@@ -70,6 +70,8 @@
 
 	const handleMousedown = (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		pauseEvent(e.detail.event);
+		if (isRightMB(e.detail.event as MouseEvent))
+			return ;
 		containerBounds = container.getBoundingClientRect();
 		drag = true;
 		selectNode(e.detail.node);
@@ -256,7 +258,7 @@
 
 <div>
 	<div bind:this={container} style="position: relative; width: {width}px; height: {height}px;">
-		<EdgeCanvas>
+		<EdgeCanvas hasBackground={true}>
 			{#each edges as edge}
 				<Edge edge={edge} />
 			{/each}
@@ -266,15 +268,19 @@
 		</EdgeCanvas>
 		<NodeCanvas>
 			{#each nodes as node}
+			{#if node.parentNode === undefined}
 				<DefaultNode 
 					{node} 
 					selected={selectedNodeIds.includes(node.id)}
 					on:nodedragstart={handleMousedown}
 					on:nodedragstop={handleMouseup}
+					{handleMousedown}
+					{handleMouseup}
 					{edgeLinkStart}
 					{edgeLinkEnd}
 					{edgeLinkEnter}
 					/>
+			{/if}
 			{/each}
 		</NodeCanvas>  
 	</div>

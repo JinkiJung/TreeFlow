@@ -27,11 +27,28 @@
 			},
 			size: {
 				width: 160,
-				height: 60,
+				height: 200,
 			},
 			data: {
 				label: 'node 1',
-			}
+			},
+			children: [
+				{
+					id: 'node4',
+					position: {
+						x: 100,
+						y: 100,
+					},
+					size: {
+						width: 160,
+						height: 60,
+					},
+					data: {
+						label: 'node 3',
+					},
+					parentNode: 'node1'
+				}
+			]
         },
         {
             id: 'node2',

@@ -12,6 +12,7 @@ export type NodeData<T = any> = {
     selectable?: boolean;
     connectable?: boolean;
     parentNode?: string;
+    children?: NodeData[];
 }
 
 export type NodeDragItem = {

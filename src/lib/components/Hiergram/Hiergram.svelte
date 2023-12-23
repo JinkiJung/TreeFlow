@@ -258,7 +258,7 @@
 
 <div>
 	<div bind:this={container} style="position: relative; width: {width}px; height: {height}px;">
-		<EdgeCanvas hasBackground={true}>
+		<EdgeCanvas {width} {height} hasBackground={true}>
 			{#each edges as edge}
 				<Edge edge={edge} />
 			{/each}
@@ -266,7 +266,7 @@
 				<Edge edge={newEdge} />
 			{/if}
 		</EdgeCanvas>
-		<NodeCanvas>
+		<NodeCanvas initWidth={width} initHeight={height}>
 			{#each nodes as node}
 			{#if node.parentNode === undefined}
 				<DefaultNode 

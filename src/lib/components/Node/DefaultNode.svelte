@@ -85,7 +85,7 @@
 	/>
 	</div>
 	<div class="d-flex justify-content-between">
-		<NodeCanvas backgroundColor={"gray"}>
+		<NodeCanvas initWidth={width} initHeight={height} backgroundColor={"gray"} parentId={node.id}>
 			{#each children || [] as node}
 				<DefaultNode 
 					{node} 

@@ -1,8 +1,10 @@
-<script>
+<script lang="ts">
+  export let width: number = 0;
+  export let height: number = 0;
   export let hasBackground = false;
 </script>
 
-<svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" xmlns="http://www.w3.org/2000/svg">
+<svg style="position: absolute; top: 0; left: 0; width: {width}px; height: {height}px;" xmlns="http://www.w3.org/2000/svg">
     <defs>
       {#if hasBackground}
         <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">

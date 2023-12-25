@@ -1,6 +1,6 @@
-# hieragram
+# TreeFlow
 
-Hiergram is a diagram tool for data with hierarchies.
+TreeFlow is a diagram tool for data with hierarchies.
 
 ## Requirement
 

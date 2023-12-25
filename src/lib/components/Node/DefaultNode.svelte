@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import { EdgeLinkTypes, type EdgeData, type NodeData } from '../types';
 	import { edgelinkSize, nodeStore } from '../stores';
 	import EdgeLinker from '../EdgeLinker/EdgeLinker.svelte';
@@ -21,6 +21,8 @@
 
 	export let node: NodeData;
 	export let selected: boolean = false;
+	export let children: NodeData[] = [];
+	export let backgroundColor: string = 'rgba(0,0,0,0.5)';
 	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
     export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 	export let edgeLinkEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
@@ -37,24 +39,25 @@
 	let width = node.size.width;
 	let height = node.size.height;
 	let data = node.data;
-	let children = node.children;
 
 	$: {
 		x = node.position.x;
 		y = node.position.y;
-		width = node.size.width;
-		height = node.size.height;
 		data = node.data;
-		children = node.children;
 	}
 
+	const handleCanvasResize = (e: CustomEvent<{ width: number; height: number }>) => {
+		width = e.detail.width;
+		height = e.detail.height + 60;
+		console.log(width, height);
+	};
 </script>
 
 <div
 	{id}
 	role="button"
 	class="iil-container"
-	style=" top: {y}px; left: {x}px; width: {width}px; height: {height}px; background: rgba(0,0,0,0.5); border: {selected ? '2':'1'}px solid {selected ? 'red':'black'};"
+	style=" top: {y}px; left: {x}px; width: {width}px; height: {height}px; background: {backgroundColor}; border: {selected ? '2':'1'}px solid {selected ? 'red':'black'};"
 	on:click={(event) => dispatch('nodeclick', { node, event })}
 	on:keydown={(event) => {}}
 	on:mousedown={(event) => dispatch('nodedragstart', { node, event })}
@@ -85,7 +88,13 @@
 	/>
 	</div>
 	<div class="d-flex justify-content-between">
-		<NodeCanvas initWidth={width} initHeight={height} backgroundColor={"gray"} parentId={node.id}>
+		<NodeCanvas
+			initWidth={width}
+			initHeight={children.length > 0 ? height : 0}
+			backgroundColor={"rgba(230,230,230,0.5)"}
+			parentId={node.id}
+			hasChildren={children.length > 0}
+			on:canvasresize={handleCanvasResize}>
 			{#each children || [] as node}
 				<DefaultNode 
 					{node} 

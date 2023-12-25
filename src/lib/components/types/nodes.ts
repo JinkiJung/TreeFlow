@@ -11,8 +11,8 @@ export type NodeData<T = any> = {
     draggable?: boolean;
     selectable?: boolean;
     connectable?: boolean;
-    parentNode?: string;
-    children?: NodeData[];
+    parent?: string;
+    children?: string[];
 }
 
 export type NodeDragItem = {
@@ -25,7 +25,7 @@ export type NodeDragItem = {
       height: number | null;
       positionAbsolute: XYPosition;
     };
-    parentNode?: string;
+    parent?: string;
     dragging?: boolean;
     expandParent?: boolean;
   };

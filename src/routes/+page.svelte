@@ -33,21 +33,7 @@
 				label: 'node 1',
 			},
 			children: [
-				{
-					id: 'node4',
-					position: {
-						x: 100,
-						y: 100,
-					},
-					size: {
-						width: 160,
-						height: 60,
-					},
-					data: {
-						label: 'node 3',
-					},
-					parentNode: 'node1'
-				}
+				'node4'
 			]
         },
         {
@@ -78,6 +64,21 @@
 				label: 'node 3',
 			}
         },
+		{
+			id: 'node4',
+			position: {
+				x: 100,
+				y: 100,
+			},
+			size: {
+				width: 160,
+				height: 60,
+			},
+			data: {
+				label: 'node 4',
+			},
+			parent: 'node1'
+		}
     ] as NodeData[];
 	nodeStore.set(nodeItems);
 	edgeStore.set(edgeItems);

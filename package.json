@@ -1,7 +1,7 @@
 {
-	"name": "svelte",
+	"name": "treeflow",
 	"version": "0.0.1",
-	"homepage": "https://jinkijung.github.io/hieragram",
+	"homepage": "https://jinkijung.github.io/treeflow",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

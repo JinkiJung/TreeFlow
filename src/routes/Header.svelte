@@ -13,7 +13,7 @@
 
 
 	<div class="corner">
-		<a href="https://github.com/JinkiJung/hieragram">
+		<a href="https://github.com/JinkiJung/TreeFlow">
 			<img src={github} alt="GitHub" />
 		</a>
 	</div>

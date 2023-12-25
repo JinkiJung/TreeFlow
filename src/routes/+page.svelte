@@ -1,11 +1,11 @@
 
 <script lang='ts'>
-	import Hiergram from '$lib/components/Hiergram/Hiergram.svelte';
+	import TreeFlow from '$lib/components/TreeFlow/TreeFlow.svelte';
 	import { writable } from 'svelte/store';
 	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
 	import { edgeStore, nodeStore } from '$lib/components/stores';
 
-	let hiergram: Hiergram;
+	let treeflow: TreeFlow;
 	let edgeItems: EdgeData[]= [
 		{
 			id: 'edge1',
@@ -85,7 +85,7 @@
 </script>
 
 <svelte:head>
-	<title>Hiergram</title>
+	<title>TreeFlow</title>
 	<meta name="description" content="Svelte demo app" />
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </svelte:head>
@@ -95,11 +95,11 @@
 		<span class="welcome">
 		</span>
 
-		Hieragram Svelte Demo
+		TreeFlow Svelte Demo
 	</h1>
 	<div class="container" >
-		<Hiergram bind:this={hiergram} width={600} height={400}/>
-		<button on:click={(e) => hiergram.addNode()}
+		<TreeFlow bind:this={treeflow} width={600} height={400}/>
+		<button on:click={(e) => treeflow.addNode()}
 		>create new</button>
 	</div>
 	

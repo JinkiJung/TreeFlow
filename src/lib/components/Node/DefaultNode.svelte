@@ -22,7 +22,7 @@
 	export let node: NodeData;
 	export let selected: boolean = false;
 	export let children: NodeData[] = [];
-	export let backgroundColor: string = 'rgba(0,0,0,0.5)';
+	export let backgroundColor: string = 'rgba(0,0,0,0.0)';
 	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
     export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 	export let edgeLinkEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
@@ -39,6 +39,7 @@
 	let width = node.size.width;
 	let height = node.size.height;
 	let data = node.data;
+	let container: HTMLDivElement;
 
 	$: {
 		x = node.position.x;
@@ -47,17 +48,18 @@
 	}
 
 	const handleCanvasResize = (e: CustomEvent<{ width: number; height: number }>) => {
-		width = e.detail.width;
-		height = e.detail.height + 60;
+		width = container.clientWidth;
+		height = container.clientHeight;
 		console.log(width, height);
 	};
 </script>
 
 <div
 	{id}
+	bind:this={container}
 	role="button"
 	class="iil-container"
-	style=" top: {y}px; left: {x}px; width: {width}px; height: {height}px; background: {backgroundColor}; border: {selected ? '2':'1'}px solid {selected ? 'red':'black'};"
+	style=" top: {y}px; left: {x}px; background: {backgroundColor}; outline: {selected ? '2':'1'}px solid {selected ? 'red':'black'};"
 	on:click={(event) => dispatch('nodeclick', { node, event })}
 	on:keydown={(event) => {}}
 	on:mousedown={(event) => dispatch('nodedragstart', { node, event })}
@@ -68,7 +70,7 @@
 	on:contextmenu={(event) => dispatch('nodecontextmenu', { node, event })}
 	tabindex="0"
 >
-	<div class="d-flex justify-content-between">
+	<div class="d-flex justify-content-between condition">
 		<EdgeLinker
 			{edgelinkSize}
 			{node}
@@ -85,6 +87,7 @@
 		class="p-0"
 		style="width: 100%; height: 20px; border: 0px solid black;"
 		value={data.label ? data.label : ''}
+		
 	/>
 	</div>
 	<div class="d-flex justify-content-between">
@@ -109,7 +112,7 @@
 			{/each}
 		</NodeCanvas>
 	</div>
-	<div class="d-flex justify-content-between">
+	<div class="d-flex justify-content-between condition">
 		<div>
 
 		</div>
@@ -127,5 +130,10 @@
 <style>
 .iil-container{
 	position: absolute;
+}
+
+.condition {
+	background: rgba(101, 101, 101, 1);
+	border: 0px;
 }
 </style>

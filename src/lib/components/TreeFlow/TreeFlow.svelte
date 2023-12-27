@@ -7,8 +7,6 @@
 	import { edgeStore, edgelinkSize, nodeStore } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes } from "../types";
 	import { getEdgeEndpoint, isRightMB, pauseEvent, updateAllEdgeEndpoints } from "../types/dom";
-
-    //type $$Props = HiergramProps;
     
 	export let width: number = 0;
 	export let height: number = 0;
@@ -273,7 +271,6 @@
 					selected={selectedNodeIds.includes(node.id)}
 					on:nodedragstart={handleMousedown}
 					on:nodedragstop={handleMouseup}
-					backgroundColor={"rgba(220,220,220,1)"}
 					{handleMousedown}
 					{handleMouseup}
 					{edgeLinkStart}

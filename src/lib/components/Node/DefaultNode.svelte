@@ -3,7 +3,6 @@
 	import { EdgeLinkTypes, type EdgeData, type NodeData } from '../types';
 	import { edgelinkSize, nodeStore } from '../stores';
 	import EdgeLinker from '../EdgeLinker/EdgeLinker.svelte';
-	import { pauseEvent } from '../types/dom';
 	import BezierEdge from '../Edge/BezierEdge.svelte';
 	import NodeCanvas from '../Canvas/NodeCanvas.svelte';
 	import { DefaultNode } from '.';
@@ -40,6 +39,10 @@
 	let height = node.size.height;
 	let data = node.data;
 	let container: HTMLDivElement;
+	let actValue: string = data.label;
+	let actInput: HTMLInputElement;
+	let edgeLinkSelected: boolean = false;
+	let expanded: boolean = children.length > 0;
 
 	$: {
 		x = node.position.x;
@@ -50,7 +53,6 @@
 	const handleCanvasResize = (e: CustomEvent<{ width: number; height: number }>) => {
 		width = container.clientWidth;
 		height = container.clientHeight;
-		console.log(width, height);
 	};
 </script>
 
@@ -74,6 +76,7 @@
 		<EdgeLinker
 			{edgelinkSize}
 			{node}
+			selected={edgeLinkSelected}
 			type={EdgeLinkTypes.Start}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
@@ -83,34 +86,40 @@
 	</div>
 	<div>
 		<input
+		bind:this={actInput}
+		bind:value={actValue}
 		type="text"
 		class="p-0"
 		style="width: 100%; height: 20px; border: 0px solid black;"
-		value={data.label ? data.label : ''}
-		
+		on:click={(event) => actInput.focus()}
 	/>
 	</div>
 	<div class="d-flex justify-content-between">
-		<NodeCanvas
-			initWidth={width}
-			initHeight={children.length > 0 ? height : 0}
-			backgroundColor={"rgba(230,230,230,0.5)"}
-			parentId={node.id}
-			hasChildren={children.length > 0}
-			on:canvasresize={handleCanvasResize}>
-			{#each children || [] as node}
-				<DefaultNode 
-					{node} 
-					on:nodedragstart={handleMousedown}
-					on:nodedragstop={handleMouseup}
-					{edgeLinkStart}
-					{edgeLinkEnd}
-					{edgeLinkEnter}
-					handleMousedown={handleMousedown}
-					handleMouseup={handleMouseup}
-					/>
-			{/each}
-		</NodeCanvas>
+		{#if expanded}
+			<NodeCanvas
+				initWidth={width}
+				initHeight={children.length > 0 ? height : 0}
+				backgroundColor={"rgba(230,230,230,0.5)"}
+				parentId={node.id}
+				hasChildren={children.length > 0}
+				on:canvasresize={handleCanvasResize}>
+				{#each children || [] as node}
+					<DefaultNode 
+						{node} 
+						on:nodedragstart={handleMousedown}
+						on:nodedragstop={handleMouseup}
+						{edgeLinkStart}
+						{edgeLinkEnd}
+						{edgeLinkEnter}
+						handleMousedown={handleMousedown}
+						handleMouseup={handleMouseup}
+						/>
+				{/each}
+			</NodeCanvas>
+		{:else}
+			<button class="addBtn" on:click={(e)=>expanded != expanded}>+</button>
+		{/if}
+		
 	</div>
 	<div class="d-flex justify-content-between condition">
 		<div>
@@ -120,6 +129,7 @@
 			{edgelinkSize}
 			{node}
 			type={EdgeLinkTypes.End}
+			selected={edgeLinkSelected}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
 			on:edgelinkenter={edgeLinkEnter}
@@ -135,5 +145,16 @@
 .condition {
 	background: rgba(101, 101, 101, 1);
 	border: 0px;
+}
+
+
+/* addBtn style is for a button full fit to the parent div and color is blue, font is very small */
+.addBtn {
+	background-color: #007bff;
+	color: white;
+	width: 100%;
+	height: 10px;
+	border: 0px;
+	font-size: 8px;
 }
 </style>

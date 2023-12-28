@@ -27,7 +27,6 @@
     });
 
     onMount(() => {
-        console.log(initWidth, initHeight);
         ({ width, height } = calculateCanvasSize());
         initialized = true;
     });

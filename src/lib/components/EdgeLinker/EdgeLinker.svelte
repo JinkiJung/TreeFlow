@@ -4,6 +4,7 @@
 
     export let edgelinkSize: number = 0;
     export let node: NodeData;
+    export let selected: boolean = false;
     export let type: EdgeLinkTypes = EdgeLinkTypes.Start;
 
     const dispatch = createEventDispatcher<{
@@ -15,7 +16,7 @@
 
 <div class="p-0"
     role="button"
-    style="width: {edgelinkSize}px; height: {edgelinkSize}px; border: 1px solid black;"
+    style="height: {edgelinkSize}px; outline: {selected ? 2: 1}px solid {selected? 'red' : 'black'}; user-select: none;"
     on:mousedown={(event) => dispatch('edgelinkstart', { node, type, event })}
     on:mouseup={(event) => dispatch('edgelinkend', { node, type, event })}
     on:mouseenter={(event) => dispatch('edgelinkenter', { node, type, event })}

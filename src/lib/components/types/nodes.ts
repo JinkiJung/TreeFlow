@@ -1,4 +1,4 @@
-import type { Size, XYPosition } from ".";
+import type { EdgeLinkData, Size, XYPosition } from ".";
 
 export type NodeData<T = any> = {
     id?: string;
@@ -13,6 +13,8 @@ export type NodeData<T = any> = {
     connectable?: boolean;
     parent?: string;
     children?: string[];
+    startLinker: EdgeLinkData;
+    endLinker: EdgeLinkData;
 }
 
 export type NodeDragItem = {

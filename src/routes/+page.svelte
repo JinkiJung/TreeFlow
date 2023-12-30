@@ -34,7 +34,19 @@
 			},
 			children: [
 				'node4'
-			]
+			],
+			startLinker: {
+				type: EdgeLinkTypes.Start,
+				connected: false,
+				highlighted: false,
+				selected: false,
+			},
+			endLinker: {
+				type: EdgeLinkTypes.End,
+				connected: false,
+				highlighted: false,
+				selected: false,
+			}
         },
         {
             id: 'node2',
@@ -48,6 +60,18 @@
 			},
 			data: {
 				label: 'node 2',
+			},
+			startLinker: {
+				type: EdgeLinkTypes.Start,
+				connected: false,
+				highlighted: false,
+				selected: false,
+			},
+			endLinker: {
+				type: EdgeLinkTypes.End,
+				connected: false,
+				highlighted: false,
+				selected: false,
 			}
         },
 		{
@@ -62,6 +86,18 @@
 			},
 			data: {
 				label: 'node 3',
+			},
+			startLinker: {
+				type: EdgeLinkTypes.Start,
+				connected: false,
+				highlighted: false,
+				selected: false,
+			},
+			endLinker: {
+				type: EdgeLinkTypes.End,
+				connected: false,
+				highlighted: false,
+				selected: false,
 			}
         },
 		{
@@ -77,7 +113,19 @@
 			data: {
 				label: 'node 4',
 			},
-			parent: 'node1'
+			parent: 'node1',
+			startLinker: {
+				type: EdgeLinkTypes.Start,
+				connected: false,
+				highlighted: false,
+				selected: false,
+			},
+			endLinker: {
+				type: EdgeLinkTypes.End,
+				connected: false,
+				highlighted: false,
+				selected: false,
+			}
 		}
     ] as NodeData[];
 	nodeStore.set(nodeItems);

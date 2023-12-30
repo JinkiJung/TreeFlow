@@ -7,6 +7,7 @@
 	import { edgeStore, edgelinkSize, nodeStore } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes } from "../types";
 	import { getEdgeEndpoint, isRightMB, updateAllEdgeEndpoints } from "../types/dom";
+	import { newNode } from "$lib/interaction/newNode";
     
 	export let width: number = 0;
 	export let height: number = 0;
@@ -15,19 +16,7 @@
 	let containerBounds: DOMRect | null = null;
 	let nodes: NodeData[];
 	let edges: EdgeData[];
-	let newNodeTemplate: NodeData = {
-		position: {
-			x: 0,
-			y: 0,
-		},
-		size: {
-			width: 160,
-			height: 60,
-		},
-		data: {
-			label: 'node',
-		}
-	};
+	let newNodeTemplate: NodeData = newNode();
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
@@ -61,14 +50,14 @@
 	let offsetX = 0;
 	let offsetY = 0;
 	let dragNode = false;
-	let dragEdgeLinker = false;
+	let dragEdgeLink = false;
 	let newEdgeCandidate: EdgeData | null = null;
 
 	let dragStart: XYPosition = { x: 0, y: 0 };
 
 	const handleMousedown = (event: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		event.detail.event.stopPropagation();
-		if (isRightMB(event.detail.event as MouseEvent) || dragEdgeLinker)
+		if (isRightMB(event.detail.event as MouseEvent) || dragEdgeLink)
 			return ;
 		containerBounds = container.getBoundingClientRect();
 		dragNode = true;
@@ -133,7 +122,7 @@
 		event.stopPropagation();
 		containerBounds = container.getBoundingClientRect();
 		let pos = getEventPosition(event, containerBounds);
-		if (dragEdgeLinker && newEdge) {
+		if (dragEdgeLink && newEdge) {
 			updateNewEdge(pos);
 		}
 		else if (dragNode) {
@@ -147,7 +136,7 @@
 
 	const handleMouseup = () => {
 		dragNode = false;
-		dragEdgeLinker = false;
+		dragEdgeLink = false;
 		document.onmousemove = null;
 		document.onmouseleave = null;
 		document.onmouseenter = null;
@@ -158,7 +147,7 @@
 	}
 
 	const edgeLinkStart = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
-		dragEdgeLinker = true;
+		dragEdgeLink = true;
 
 		//selectNode(e.detail.node);
 		event.detail.event.stopPropagation();
@@ -199,7 +188,7 @@
 	}
 
 	const edgeLinkEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
-		dragEdgeLinker = false;
+		dragEdgeLink = false;
 		//selectNode(e.detail.node);
 		event.detail.event.stopPropagation();
 		document.onmousemove = null;
@@ -215,7 +204,7 @@
 
 	const edgeLinkEnter = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
 		event.detail.event.stopPropagation();
-		if (dragEdgeLinker && newEdge) {
+		if (dragEdgeLink && newEdge) {
 			if (newEdge.fromId !== event.detail.node.id) {
 				if (newEdge.fromId && event.detail.type === EdgeLinkTypes.End) {
 					// assign toId
@@ -244,15 +233,26 @@
 		}
 	}
 
-	export const addNode = () => {
-		nodeStore.set([...nodes, 
-		{...newNodeTemplate,
+	export const addNode = (parent?: NodeData): NodeData => {
+		const newNode = {...newNodeTemplate,
 			id: 'node' + (nodes.length + 1),
 			data: {
 				label: 'node ' + (nodes.length + 1),
-			}
-		}]);
-		console.log('addNode', nodes);
+			},
+			parent: parent?.id,
+		};
+		nodeStore.set([...nodes, newNode]);
+		return newNode;
+	}
+
+	const addChild = (node: NodeData): NodeData => {
+		const newNode = addNode(node);
+		if (node.children && node.children.length > 0) {
+			node.children.push(newNode.id!);
+		} else {
+			node.children = [newNode.id!];
+		}
+		return newNode;
 	}
 
 </script>
@@ -280,7 +280,7 @@
 					{edgeLinkStart}
 					{edgeLinkEnd}
 					{edgeLinkEnter}
-					children={nodes.filter((n) => n.parent === node.id)}
+					{addChild}
 					/>
 			{/if}
 			{/each}

@@ -2,8 +2,7 @@
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import { EdgeLinkTypes, type EdgeData, type NodeData } from '../types';
 	import { edgelinkSize, nodeStore } from '../stores';
-	import EdgeLinker from '../EdgeLinker/EdgeLinker.svelte';
-	import BezierEdge from '../Edge/BezierEdge.svelte';
+	import EdgeLink from '../EdgeLink/EdgeLink.svelte';
 	import NodeCanvas from '../Canvas/NodeCanvas.svelte';
 	import { DefaultNode } from '.';
 	
@@ -20,13 +19,13 @@
 
 	export let node: NodeData;
 	export let selected: boolean = false;
-	export let children: NodeData[] = [];
 	export let backgroundColor: string = 'rgba(0,0,0,0.0)';
 	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
     export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 	export let edgeLinkEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 	export let handleMousedown: (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => void;
 	export let handleMouseup: (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => void;
+	export let addChild: (node: NodeData) => NodeData;
 
 	function onSelectNodeHandler(event: MouseEvent | TouchEvent) {
 		dispatch('nodeclick', { node, event });
@@ -42,18 +41,34 @@
 	let actValue: string = data.label;
 	let actInput: HTMLInputElement;
 	let edgeLinkSelected: boolean = false;
-	let expanded: boolean = children.length > 0;
-
+	let children: NodeData[] = [];
+	let expanded: boolean = false;
+	let nodes: NodeData[];
+	
 	$: {
 		x = node.position.x;
 		y = node.position.y;
 		data = node.data;
+		expanded = children.length > 0;
+		children = nodes.filter((n) => n.parent === node.id);
 	}
+
+	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
+		nodes = value;
+
+		children = nodes.filter((n) => n.parent === node.id);
+		expanded = children.length > 0;
+	});
 
 	const handleCanvasResize = (e: CustomEvent<{ width: number; height: number }>) => {
 		width = container.clientWidth;
 		height = container.clientHeight;
 	};
+
+	const onAddChild = () => {
+		addChild(node);
+		expanded = !expanded;
+	}
 </script>
 
 <div
@@ -72,11 +87,11 @@
 	on:contextmenu={(event) => dispatch('nodecontextmenu', { node, event })}
 	tabindex="0"
 >
-	<div class="d-flex justify-content-between condition">
-		<EdgeLinker
+	<div class="d-flex justify-content-between iil-section condition">
+		<EdgeLink
 			{edgelinkSize}
 			{node}
-			selected={edgeLinkSelected}
+			data={node.startLinker}
 			type={EdgeLinkTypes.Start}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
@@ -84,7 +99,7 @@
 			/>
 		<div></div>
 	</div>
-	<div>
+	<div class="iil-section">
 		<input
 		bind:this={actInput}
 		bind:value={actValue}
@@ -94,11 +109,11 @@
 		on:click={(event) => actInput.focus()}
 	/>
 	</div>
-	<div class="d-flex justify-content-between">
+	<div class="d-flex justify-content-between iil-section">
 		{#if expanded}
 			<NodeCanvas
 				initWidth={width}
-				initHeight={children.length > 0 ? height : 0}
+				initHeight={children.length * 80 + 20}
 				backgroundColor={"rgba(230,230,230,0.5)"}
 				parentId={node.id}
 				hasChildren={children.length > 0}
@@ -111,25 +126,26 @@
 						{edgeLinkStart}
 						{edgeLinkEnd}
 						{edgeLinkEnter}
+						{addChild}
 						handleMousedown={handleMousedown}
 						handleMouseup={handleMouseup}
 						/>
 				{/each}
 			</NodeCanvas>
 		{:else}
-			<button class="addBtn" on:click={(e)=>expanded != expanded}>+</button>
+			<button class="addBtn" on:click={(e)=>onAddChild()}>+</button>
 		{/if}
 		
 	</div>
-	<div class="d-flex justify-content-between condition">
+	<div class="d-flex justify-content-between iil-section condition">
 		<div>
 
 		</div>
-		<EdgeLinker
+		<EdgeLink
 			{edgelinkSize}
 			{node}
+			data={node.endLinker}
 			type={EdgeLinkTypes.End}
-			selected={edgeLinkSelected}
 			on:edgelinkstart={edgeLinkStart}
 			on:edgelinkend={edgeLinkEnd}
 			on:edgelinkenter={edgeLinkEnter}
@@ -140,13 +156,19 @@
 <style>
 .iil-container{
 	position: absolute;
+	margin: 0px;
+	padding: 0px;
+}
+
+.iil-section {
+	margin: 0px;
+	padding: 0px;
 }
 
 .condition {
 	background: rgba(101, 101, 101, 1);
 	border: 0px;
 }
-
 
 /* addBtn style is for a button full fit to the parent div and color is blue, font is very small */
 .addBtn {

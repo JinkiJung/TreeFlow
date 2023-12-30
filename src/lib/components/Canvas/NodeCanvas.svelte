@@ -51,8 +51,8 @@
         const maxY = Math.max(...nodePositions.map((pos) => pos.y));
 
         const size = {
-            width: maxX,
-            height: maxY,
+            width: maxX + 10,
+            height: maxY + 10,
         };
         dispatch('canvasresize', size);
         return size;

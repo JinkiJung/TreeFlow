@@ -1,10 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-	import { EdgeLinkTypes, type NodeData } from "../types";
+	import { EdgeLinkTypes, type EdgeLinkData, type NodeData } from "../types";
 
+    export let data: EdgeLinkData;
     export let edgelinkSize: number = 0;
     export let node: NodeData;
-    export let selected: boolean = false;
     export let type: EdgeLinkTypes = EdgeLinkTypes.Start;
 
     const dispatch = createEventDispatcher<{
@@ -12,11 +12,13 @@
         edgelinkend: { node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent };
         edgelinkenter: { node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent };
 	}>();
+
+    console.log(data);
 </script>
 
 <div class="p-0"
     role="button"
-    style="height: {edgelinkSize}px; outline: {selected ? 2: 1}px solid {selected? 'red' : 'black'}; user-select: none;"
+    style="height: {edgelinkSize}px; border: {data.selected ? 2: 1}px solid {data.selected? 'red' : 'black'}; user-select: none;"
     on:mousedown={(event) => dispatch('edgelinkstart', { node, type, event })}
     on:mouseup={(event) => dispatch('edgelinkend', { node, type, event })}
     on:mouseenter={(event) => dispatch('edgelinkenter', { node, type, event })}

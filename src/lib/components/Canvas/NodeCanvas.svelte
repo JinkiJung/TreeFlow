@@ -14,10 +14,6 @@
     let nodes: NodeData[] = [];
     let initialized: boolean = false;
 
-    const dispatch = createEventDispatcher<{
-		canvasresize: { width: number, height: number };
-	}>();
-
     /*
     $: { ({ width, height } = calculateCanvasSize()); }
     */
@@ -54,11 +50,10 @@
             width: maxX + 10,
             height: maxY + 10,
         };
-        dispatch('canvasresize', size);
         return size;
     };
 </script>
 
-<div style="position: relative; top: 0; left: 0; width: {width}px; height: {height}px; z-index: 2; background:{backgroundColor}">
+<div style="position: relative; top: 0; left: 0; width: 100%; height: 100%; background:{backgroundColor};">
     <slot />
 </div>

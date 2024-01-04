@@ -3,11 +3,12 @@
 	import EdgeCanvas from "../Canvas/EdgeCanvas.svelte";
 	import NodeCanvas from "../Canvas/NodeCanvas.svelte";
 	import { Edge } from "../Edge";
-	import DefaultNode from "../Node/DefaultNode.svelte";
 	import { edgeStore, edgelinkSize, nodeStore } from "../stores";
-	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes } from "../types";
+	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes, ResizeDirection, type Size } from "../types";
 	import { getEdgeEndpoint, isRightMB, updateAllEdgeEndpoints } from "../types/dom";
 	import { newNode } from "$lib/interaction/newNode";
+	import { DefaultNode } from "../Node";
+	import type { ResizableContainer } from "../Container";
     
 	export let width: number = 0;
 	export let height: number = 0;
@@ -17,6 +18,17 @@
 	let nodes: NodeData[];
 	let edges: EdgeData[];
 	let newNodeTemplate: NodeData = newNode();
+
+	let selectedNodeIds: string[] = [];
+	let newEdge: EdgeData | null = null;
+	
+	let offsetX = 0;
+	let offsetY = 0;
+	let dragNode = false;
+	let dragEdgeLink = false;
+	let dragContainer = false;
+	let resizeDirection: ResizeDirection = ResizeDirection.None;
+	let newEdgeCandidate: EdgeData | null = null;
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
@@ -44,20 +56,9 @@
         }
     });
 
-	let selectedNodeIds: string[] = [];
-	let newEdge: EdgeData | null = null;
-	
-	let offsetX = 0;
-	let offsetY = 0;
-	let dragNode = false;
-	let dragEdgeLink = false;
-	let newEdgeCandidate: EdgeData | null = null;
-
-	let dragStart: XYPosition = { x: 0, y: 0 };
-
-	const handleMousedown = (event: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
+	const dragNodeStart = (event: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		event.detail.event.stopPropagation();
-		if (isRightMB(event.detail.event as MouseEvent) || dragEdgeLink)
+		if (isRightMB(event.detail.event as MouseEvent) || dragEdgeLink || dragContainer)
 			return ;
 		containerBounds = container.getBoundingClientRect();
 		dragNode = true;
@@ -66,8 +67,7 @@
 		let pos = getEventPosition(event.detail.event, containerBounds);
 		offsetX = pos.x - nodeSelected.position.x;
 		offsetY = pos.y - nodeSelected.position.y;
-		dragStart = pos;
-		document.onmousemove = handleMousemove;
+		document.onmousemove = dragNodeMove;
 		document.onmouseleave = handleMouseleave;
 	}
 
@@ -80,11 +80,11 @@
 	const handleMouseEnter = (event: MouseEvent | TouchEvent) => {
 		event.stopPropagation();
 		if((event.type === 'mousedown' || event.type === 'touchstart') && selectedNodeIds.length) {
-			document.onmousemove = handleMousemove;
+			document.onmousemove = dragNodeMove;
 		}
 	}
 
-	const updateNodes = (pos: XYPosition) => {
+	const updateNodePosition = (pos: XYPosition) => {
 		if (selectedNodeIds.length) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			nodeStore.set(nodes.map((node) => {
@@ -118,7 +118,7 @@
 		}
 	}
 
-	const handleMousemove = ( event: MouseEvent | TouchEvent) => {
+	const dragNodeMove = ( event: MouseEvent | TouchEvent) => {
 		event.stopPropagation();
 		containerBounds = container.getBoundingClientRect();
 		let pos = getEventPosition(event, containerBounds);
@@ -126,7 +126,7 @@
 			updateNewEdge(pos);
 		}
 		else if (dragNode) {
-			updateNodes(pos);
+			updateNodePosition(pos);
 		}
 	}
 
@@ -134,7 +134,7 @@
 		selectedNodeIds = [node.id!];
 	};
 
-	const handleMouseup = () => {
+	const dragNodeStop = () => {
 		dragNode = false;
 		dragEdgeLink = false;
 		document.onmousemove = null;
@@ -146,7 +146,7 @@
 		}
 	}
 
-	const edgeLinkStart = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+	const linkEdgeStart = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
 		dragEdgeLink = true;
 
 		//selectNode(e.detail.node);
@@ -182,12 +182,12 @@
 		offsetX = pos.x - event.detail.node.position.x;
 		offsetY = pos.y - event.detail.node.position.y;
 
-		document.onmousemove = handleMousemove;
+		document.onmousemove = dragNodeMove;
 		document.onmouseleave = handleMouseleave;
-		document.onmouseup = handleMouseup;
+		document.onmouseup = dragNodeStop;
 	}
 
-	const edgeLinkEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+	const linkEdgeEnd = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
 		dragEdgeLink = false;
 		//selectNode(e.detail.node);
 		event.detail.event.stopPropagation();
@@ -202,7 +202,7 @@
 		}
 	}
 
-	const edgeLinkEnter = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+	const linkEdgeEnter = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
 		event.detail.event.stopPropagation();
 		if (dragEdgeLink && newEdge) {
 			if (newEdge.fromId !== event.detail.node.id) {
@@ -231,6 +231,80 @@
 				}
 			}
 		}
+	}
+
+	const resizeStart = (event: CustomEvent<{ nodeId: string, direction: ResizeDirection, event: MouseEvent | TouchEvent; }>) => {
+		dragContainer = true;
+
+		event.detail.event.stopPropagation();
+		resizeDirection = event.detail.direction;
+		selectedNodeIds = [event.detail.nodeId];
+		let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
+
+		containerBounds = container.getBoundingClientRect();
+
+		let pos = getEventPosition(event.detail.event, containerBounds);
+		offsetX = pos.x - selected.position.x - selected.size.width;
+		offsetY = pos.y - containerBounds.y;
+
+		console.log("start", selected);
+
+		document.onmousemove = resizeMove;
+		//document.onmouseleave = handleMouseleave;
+		document.onmouseup = resizeStop;
+	}
+
+	const resizeMove = ( event: MouseEvent | TouchEvent) => {
+		event.stopPropagation();
+		console.log((event as MouseEvent).clientX, (event as MouseEvent).clientY);
+		containerBounds = container.getBoundingClientRect();
+		let pos = getEventPosition(event, containerBounds);
+		console.log(pos.x - offsetX);
+		if (dragContainer) {
+			switch(resizeDirection) {
+				case ResizeDirection.Top:
+					// update node's y and height
+					break;
+				case ResizeDirection.Bottom:
+					// update node's height
+					break;
+				case ResizeDirection.Left:
+					// update node's x and width
+					break;
+				case ResizeDirection.Right:
+					// update node's width
+					updateNodePosAndSize(pos);
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
+	const updateNodePosAndSize = (pos: XYPosition) => {
+		if (selectedNodeIds.length) {
+			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
+			nodeStore.set(nodes.map((node) => {
+				if (selected.id === node.id) {
+					console.log(node);
+					return {
+						...node,
+						size: {
+							width: pos.x - offsetX - node.position.x,
+							height: node.size.height,
+						}
+					} as NodeData; // Explicitly define the type here
+				}
+				return node;
+			}));
+		}
+	}
+	
+	const resizeStop = () => {
+		dragContainer = false;
+		document.onmousemove = null;
+		document.onmouseleave = null;
+		document.onmouseenter = null;
 	}
 
 	export const addNode = (parent?: NodeData): NodeData => {
@@ -273,13 +347,13 @@
 				<DefaultNode 
 					{node} 
 					selected={selectedNodeIds.includes(node.id)}
-					on:nodedragstart={handleMousedown}
-					on:nodedragstop={handleMouseup}
-					{handleMousedown}
-					{handleMouseup}
-					{edgeLinkStart}
-					{edgeLinkEnd}
-					{edgeLinkEnter}
+					on:nodedragstart={dragNodeStart}
+					on:nodedragstop={dragNodeStop}
+					handleMousedown={dragNodeStart}
+					{linkEdgeStart}
+					{linkEdgeEnd}
+					{linkEdgeEnter}
+					{resizeStart}
 					{addChild}
 					/>
 			{/if}

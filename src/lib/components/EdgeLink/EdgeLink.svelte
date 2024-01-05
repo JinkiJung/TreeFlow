@@ -12,8 +12,6 @@
         edgelinkend: { node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent };
         edgelinkenter: { node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent };
 	}>();
-
-    console.log(data);
 </script>
 
 <div class="p-0"

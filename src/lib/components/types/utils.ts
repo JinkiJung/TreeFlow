@@ -16,3 +16,15 @@ export type EdgeLinkData = {
     connected: boolean;
     highlighted: boolean;
 }
+
+export enum ResizeDirection {
+    None = 'none',
+    Top = 'top',
+    TopRight = 'top-right',
+    Right = 'right',
+    BottomRight = 'bottom-right',
+    Bottom = 'bottom',
+    BottomLeft = 'bottom-left',
+    Left = 'left',
+    TopLeft = 'top-left',
+};

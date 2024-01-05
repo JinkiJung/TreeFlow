@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-	import { EdgeLinkTypes, type EdgeData, type NodeData } from '../types';
-	import { edgelinkSize, nodeStore } from '../stores';
+	import { EdgeLinkTypes, type EdgeData, type NodeData, ResizeDirection } from '../types';
+	import { sectionHeight, nodeStore } from '../stores';
 	import EdgeLink from '../EdgeLink/EdgeLink.svelte';
 	import NodeCanvas from '../Canvas/NodeCanvas.svelte';
 	import { DefaultNode } from '.';
+	import { ResizableContainer } from '../Container';
+
 	
 	const dispatch = createEventDispatcher<{
 		nodeclick: { node: NodeData; event: MouseEvent | TouchEvent };
@@ -20,11 +22,11 @@
 	export let node: NodeData;
 	export let selected: boolean = false;
 	export let backgroundColor: string = 'rgba(0,0,0,0.0)';
-	export let edgeLinkStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
-    export let edgeLinkEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
-	export let edgeLinkEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
+	export let linkEdgeStart: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
+    export let linkEdgeEnd: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
+	export let linkEdgeEnter: (e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>) => void;
 	export let handleMousedown: (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => void;
-	export let handleMouseup: (e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => void;
+	export let resizeStart: (e: CustomEvent<{ nodeId: string, direction: ResizeDirection; event: MouseEvent | TouchEvent; }>) => void;
 	export let addChild: (node: NodeData) => NodeData;
 
 	function onSelectNodeHandler(event: MouseEvent | TouchEvent) {
@@ -48,6 +50,8 @@
 	$: {
 		x = node.position.x;
 		y = node.position.y;
+		width = node.size.width;
+		height = node.size.height;
 		data = node.data;
 		expanded = children.length > 0;
 		children = nodes.filter((n) => n.parent === node.id);
@@ -60,11 +64,6 @@
 		expanded = children.length > 0;
 	});
 
-	const handleCanvasResize = (e: CustomEvent<{ width: number; height: number }>) => {
-		width = container.clientWidth;
-		height = container.clientHeight;
-	};
-
 	const onAddChild = () => {
 		addChild(node);
 		expanded = !expanded;
@@ -75,7 +74,7 @@
 	{id}
 	bind:this={container}
 	role="button"
-	class="iil-container"
+	class="iil-container unselectable"
 	style=" top: {y}px; left: {x}px; background: {backgroundColor}; outline: {selected ? '2':'1'}px solid {selected ? 'red':'black'};"
 	on:click={(event) => dispatch('nodeclick', { node, event })}
 	on:keydown={(event) => {}}
@@ -89,13 +88,13 @@
 >
 	<div class="d-flex justify-content-between iil-section condition">
 		<EdgeLink
-			{edgelinkSize}
+			edgelinkSize={sectionHeight}
 			{node}
 			data={node.startLinker}
 			type={EdgeLinkTypes.Start}
-			on:edgelinkstart={edgeLinkStart}
-			on:edgelinkend={edgeLinkEnd}
-			on:edgelinkenter={edgeLinkEnter}
+			on:edgelinkstart={linkEdgeStart}
+			on:edgelinkend={linkEdgeEnd}
+			on:edgelinkenter={linkEdgeEnter}
 			/>
 		<div></div>
 	</div>
@@ -105,33 +104,38 @@
 		bind:value={actValue}
 		type="text"
 		class="p-0"
-		style="width: 100%; height: 20px; border: 0px solid black;"
+		style="width: {width}px; height: {sectionHeight}px; border: 0px solid black;"
 		on:click={(event) => actInput.focus()}
 	/>
 	</div>
 	<div class="d-flex justify-content-between iil-section">
 		{#if expanded}
+		<ResizableContainer 
+			nodeId={node.id}
+			width={width}
+			height={height - sectionHeight * 3}
+			on:resizestart={resizeStart}>
 			<NodeCanvas
 				initWidth={width}
 				initHeight={children.length * 80 + 20}
 				backgroundColor={"rgba(230,230,230,0.5)"}
 				parentId={node.id}
 				hasChildren={children.length > 0}
-				on:canvasresize={handleCanvasResize}>
+				>
 				{#each children || [] as node}
 					<DefaultNode 
 						{node} 
 						on:nodedragstart={handleMousedown}
-						on:nodedragstop={handleMouseup}
-						{edgeLinkStart}
-						{edgeLinkEnd}
-						{edgeLinkEnter}
+						linkEdgeStart={linkEdgeStart}
+						linkEdgeEnd={linkEdgeEnd}
+						linkEdgeEnter={linkEdgeEnter}
 						{addChild}
 						handleMousedown={handleMousedown}
-						handleMouseup={handleMouseup}
+						{resizeStart}
 						/>
 				{/each}
 			</NodeCanvas>
+		</ResizableContainer>
 		{:else}
 			<button class="addBtn" on:click={(e)=>onAddChild()}>+</button>
 		{/if}
@@ -142,13 +146,13 @@
 
 		</div>
 		<EdgeLink
-			{edgelinkSize}
+			edgelinkSize={sectionHeight}
 			{node}
 			data={node.endLinker}
 			type={EdgeLinkTypes.End}
-			on:edgelinkstart={edgeLinkStart}
-			on:edgelinkend={edgeLinkEnd}
-			on:edgelinkenter={edgeLinkEnter}
+			on:edgelinkstart={linkEdgeStart}
+			on:edgelinkend={linkEdgeEnd}
+			on:edgelinkenter={linkEdgeEnter}
 			/>
 	</div>
 </div>

@@ -1,5 +1,5 @@
 import { EdgeLinkTypes, type NodeData, type EdgeData } from ".";
-import { edgelinkSize } from "../stores";
+import { sectionHeight } from "../stores";
 
 export const isMouseEvent = (event: MouseEvent | TouchEvent): event is MouseEvent => 'clientX' in event;
 
@@ -17,13 +17,13 @@ export const getEventPosition = (event: MouseEvent | TouchEvent, bounds?: DOMRec
 export const getEdgeEndpoint = (node: NodeData, type: EdgeLinkTypes) => {
   if (type === EdgeLinkTypes.Start) {
     return {
-      x: node.position.x + edgelinkSize / 2,
-      y: node.position.y + edgelinkSize / 2,
+      x: node.position.x + sectionHeight / 2,
+      y: node.position.y + sectionHeight / 2,
     };
   } else if (type === EdgeLinkTypes.End) {
     return {
-      x: node.position.x + node.size.width - edgelinkSize / 2,
-      y: node.position.y + node.size.height - edgelinkSize / 2,
+      x: node.position.x + node.size.width - sectionHeight / 2,
+      y: node.position.y + node.size.height - sectionHeight / 2,
     };
   } else {
     return {

@@ -3,7 +3,7 @@
 	import EdgeCanvas from "../Canvas/EdgeCanvas.svelte";
 	import NodeCanvas from "../Canvas/NodeCanvas.svelte";
 	import { Edge } from "../Edge";
-	import { edgeStore, edgelinkSize, nodeStore } from "../stores";
+	import { edgeStore, sectionHeight, nodeStore } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes, ResizeDirection, type Size } from "../types";
 	import { getEdgeEndpoint, isRightMB, updateAllEdgeEndpoints } from "../types/dom";
 	import { newNode } from "$lib/interaction/newNode";
@@ -24,6 +24,10 @@
 	
 	let offsetX = 0;
 	let offsetY = 0;
+	let offsetXPlain = 0;
+	let offsetYPlain = 0;
+	let offsetWidth = 0;
+	let offsetHeight = 0;
 	let dragNode = false;
 	let dragEdgeLink = false;
 	let dragContainer = false;
@@ -245,9 +249,11 @@
 
 		let pos = getEventPosition(event.detail.event, containerBounds);
 		offsetX = pos.x - selected.position.x - selected.size.width;
-		offsetY = pos.y - containerBounds.y;
-
-		console.log("start", selected);
+		offsetY = pos.y - selected.position.y - selected.size.height;
+		offsetYPlain = pos.y;
+		offsetHeight = selected.size.height;
+		offsetXPlain = pos.x;
+		offsetWidth = selected.size.width;
 
 		document.onmousemove = resizeMove;
 		//document.onmouseleave = handleMouseleave;
@@ -256,24 +262,48 @@
 
 	const resizeMove = ( event: MouseEvent | TouchEvent) => {
 		event.stopPropagation();
-		console.log((event as MouseEvent).clientX, (event as MouseEvent).clientY);
 		containerBounds = container.getBoundingClientRect();
 		let pos = getEventPosition(event, containerBounds);
-		console.log(pos.x - offsetX);
 		if (dragContainer) {
+			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			switch(resizeDirection) {
 				case ResizeDirection.Top:
 					// update node's y and height
+					updateNodePosAndSize(selected, {
+							width:  selected.size.width,
+							height: offsetHeight - (pos.y - offsetYPlain),
+						},
+						{
+							x: selected.position.x,
+							y: pos.y - offsetY - offsetHeight,
+						}
+						);
 					break;
 				case ResizeDirection.Bottom:
 					// update node's height
+					updateNodePosAndSize(selected, {
+							width:  selected.size.width,
+							height: pos.y - offsetY - selected.position.y,
+						});
 					break;
 				case ResizeDirection.Left:
 					// update node's x and width
+					updateNodePosAndSize(selected, {
+							width:  offsetWidth - (pos.x - offsetXPlain),
+							height: selected.size.height,
+						},
+						{
+							x: pos.x - offsetX - offsetWidth,
+							y: selected.position.y,
+						}
+						);
 					break;
 				case ResizeDirection.Right:
 					// update node's width
-					updateNodePosAndSize(pos);
+					updateNodePosAndSize(selected, {
+							width: pos.x - offsetX - selected.position.x,
+							height: selected.size.height,
+						});
 					break;
 				default:
 					break;
@@ -281,18 +311,14 @@
 		}
 	}
 
-	const updateNodePosAndSize = (pos: XYPosition) => {
+	const updateNodePosAndSize = (selected: NodeData, size: Size, pos?: XYPosition) => {
 		if (selectedNodeIds.length) {
-			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			nodeStore.set(nodes.map((node) => {
 				if (selected.id === node.id) {
-					console.log(node);
 					return {
-						...node,
-						size: {
-							width: pos.x - offsetX - node.position.x,
-							height: node.size.height,
-						}
+						...selected,
+						position: pos? pos : selected.position,
+						size,
 					} as NodeData; // Explicitly define the type here
 				}
 				return node;

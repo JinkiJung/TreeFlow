@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import { EdgeLinkTypes, type EdgeData, type NodeData, ResizeDirection } from '../types';
-	import { edgelinkSize, nodeStore } from '../stores';
+	import { sectionHeight, nodeStore } from '../stores';
 	import EdgeLink from '../EdgeLink/EdgeLink.svelte';
 	import NodeCanvas from '../Canvas/NodeCanvas.svelte';
 	import { DefaultNode } from '.';
@@ -88,7 +88,7 @@
 >
 	<div class="d-flex justify-content-between iil-section condition">
 		<EdgeLink
-			{edgelinkSize}
+			edgelinkSize={sectionHeight}
 			{node}
 			data={node.startLinker}
 			type={EdgeLinkTypes.Start}
@@ -104,7 +104,7 @@
 		bind:value={actValue}
 		type="text"
 		class="p-0"
-		style="width: {width}px; height: 20px; border: 0px solid black;"
+		style="width: {width}px; height: {sectionHeight}px; border: 0px solid black;"
 		on:click={(event) => actInput.focus()}
 	/>
 	</div>
@@ -113,7 +113,7 @@
 		<ResizableContainer 
 			nodeId={node.id}
 			width={width}
-			height={200}
+			height={height - sectionHeight * 3}
 			on:resizestart={resizeStart}>
 			<NodeCanvas
 				initWidth={width}
@@ -146,7 +146,7 @@
 
 		</div>
 		<EdgeLink
-			{edgelinkSize}
+			edgelinkSize={sectionHeight}
 			{node}
 			data={node.endLinker}
 			type={EdgeLinkTypes.End}

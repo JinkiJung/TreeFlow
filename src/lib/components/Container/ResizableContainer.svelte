@@ -20,7 +20,7 @@
 
 <div 
     bind:this={container}
-    style="position: relative; width: {width}px; height: {height}px; background: white;"
+    style="position: relative; width: {width}px; height: {height}px;"
 >
     <div class="hoverable"
         style="position: absolute; top: 0; left: 0; right: 0; height: {boundary}px; cursor: ns-resize;"
@@ -47,7 +47,16 @@
 <style>
 .hoverable:hover {
   background-color: blue;
-  transition: background-color 0.5s ease;
+  transition: background-color 0.2s ease;
+}
+
+.hoverable:active {
+  background-color: blue;
+}
+
+.hoverable:not( :hover ){
+    background-color: transparent;
+  transition: background-color 0.2s ease;
 }
 
 </style>

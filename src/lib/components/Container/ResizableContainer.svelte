@@ -18,6 +18,7 @@
 
     </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div 
     bind:this={container}
     style="position: relative; width: {width}px; height: {height}px;"

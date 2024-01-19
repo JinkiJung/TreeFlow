@@ -68,8 +68,18 @@
 		width = node.size.width;
 		height = node.size.height;
 		data = node.data;
-		expanded = children.length > 0;
 	}
+
+	onMount(() => {
+		children = nodes.filter((n) => n.parent === node.id);
+		if (children.length) {
+			adjustSize();
+		}
+	});
+
+	onDestroy(() => {
+		unsubscribeNodeStore();
+	});
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
@@ -77,6 +87,13 @@
 		children = nodes.filter((n) => n.parent === node.id);
 		expanded = children.length > 0;
 	});
+
+	const adjustSize = () => {
+		const size = calculateCanvasSize();
+		if (size.width !== node.size.width && size.height !== node.size.height) {
+			nodeStore.set([...nodes, { ...node, size }]);
+		}
+	}
 
 	const calculateCanvasSize = (): Size => {
 		if (node.children === undefined) return { width: 0, height: 0 };
@@ -103,9 +120,7 @@
 
 	const onAddChild = () => {
 		addChild(node);
-		const size = calculateCanvasSize();
-		console.log(size);
-		nodeStore.set([...nodes, { ...node, size }]);
+		adjustSize();
 	};
 </script>
 
@@ -152,12 +167,12 @@
 	<div class="d-flex justify-content-between iil-section">
 		{#if expanded}
 			<ResizableContainer
-				nodeId={node.id}
+				owningNode={node.id}
 				{width}
 				height={height - sectionHeight * 3}
 				on:resizestart={resizeStart}
 			>
-				<NodeCanvas backgroundColor={'rgba(230,230,230,0.5)'} parentId={node.id}>
+				<NodeCanvas backgroundColor={'rgba(230,230,230,0.5)'}>
 					{#each children || [] as node}
 						<DefaultNode
 							{node}

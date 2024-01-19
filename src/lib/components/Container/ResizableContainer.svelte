@@ -5,9 +5,10 @@
 
     export let width = 400;
     export let height = 200;
-    export let boundary: number = 5;
-    export let nodeId: string = '';
+    export let owningNode: string = '';
 
+    const boundary: number = 5;
+    
     let container: ResizableContainer;
 
     const dispatch = createEventDispatcher<{
@@ -25,19 +26,19 @@
 >
     <div class="hoverable"
         style="position: absolute; top: 0; left: 0; right: 0; height: {boundary}px; cursor: ns-resize;"
-        on:mousedown={(event) => dispatch('resizestart', { nodeId, direction: ResizeDirection.Top, event })}
+        on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Top, event })}
         role="button" tabindex="0" />
     <div  class="hoverable"
         style="position: absolute; bottom: 0; left: 0; right: 0; height: {boundary}px; cursor: ns-resize;"
-        on:mousedown={(event) => dispatch('resizestart', { nodeId, direction: ResizeDirection.Bottom, event })}
+        on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Bottom, event })}
         role="button" tabindex="0" />
     <div  class="hoverable"
         style="position: absolute; top: 0; bottom: 0; left: 0; width: {boundary}px; cursor: ew-resize;"
-        on:mousedown={(event) => dispatch('resizestart', { nodeId, direction: ResizeDirection.Left, event })}
+        on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Left, event })}
         role="button" tabindex="0" />
     <div  class="hoverable"
         style="position: absolute; top: 0; bottom: 0; right: 0; width: {boundary}px; cursor: ew-resize;"
-        on:mousedown={(event) => dispatch('resizestart', { nodeId, direction: ResizeDirection.Right, event })}
+        on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Right, event })}
         role="button" tabindex="0" />
     <div style="position: absolute; inset: {boundary}px;">
         <slot />

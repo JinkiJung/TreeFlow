@@ -3,8 +3,8 @@ import { EdgeLinkTypes, type NodeData } from "$lib/components/types"
 export const newNode = (): NodeData => {
     return {
         position: {
-            x: 0,
-            y: 0,
+            x: 10,
+            y: 10,
         },
         size: {
             width: 160,

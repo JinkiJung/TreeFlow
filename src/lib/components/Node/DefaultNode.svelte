@@ -33,7 +33,7 @@
 	export let linkEdgeEnd: (
 		e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>
 	) => void;
-	export let linkEdgeEnter: (
+	export let linkEdgeOverlap: (
 		e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>
 	) => void;
 	export let handleMousedown: (
@@ -57,7 +57,6 @@
 	let container: HTMLDivElement;
 	let actValue: string = data.label;
 	let actInput: HTMLInputElement;
-	let edgeLinkSelected: boolean = false;
 	let children: NodeData[] = [];
 	let expanded: boolean = false;
 	let nodes: NodeData[];
@@ -91,7 +90,9 @@
 	const adjustSize = () => {
 		const size = calculateCanvasSize();
 		if (size.width !== node.size.width && size.height !== node.size.height) {
-			nodeStore.set([...nodes, { ...node, size }]);
+			nodeStore.set(
+				nodes.map((n) => 
+					n.id === node.id ? { ...node, size} : n));
 		}
 	}
 
@@ -148,9 +149,9 @@
 			{node}
 			data={node.startLinker}
 			type={EdgeLinkTypes.Start}
-			on:edgelinkstart={linkEdgeStart}
-			on:edgelinkend={linkEdgeEnd}
-			on:edgelinkenter={linkEdgeEnter}
+			on:linkstart={linkEdgeStart}
+			on:linkend={linkEdgeEnd}
+			on:linkoverlap={linkEdgeOverlap}
 		/>
 		<div></div>
 	</div>
@@ -172,14 +173,14 @@
 				height={height - sectionHeight * 3}
 				on:resizestart={resizeStart}
 			>
-				<NodeCanvas backgroundColor={'rgba(230,230,230,0.5)'}>
+				<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'}>
 					{#each children || [] as node}
 						<DefaultNode
 							{node}
 							on:nodedragstart={handleMousedown}
 							{linkEdgeStart}
 							{linkEdgeEnd}
-							{linkEdgeEnter}
+							{linkEdgeOverlap}
 							{addChild}
 							{handleMousedown}
 							{resizeStart}
@@ -198,9 +199,9 @@
 			{node}
 			data={node.endLinker}
 			type={EdgeLinkTypes.End}
-			on:edgelinkstart={linkEdgeStart}
-			on:edgelinkend={linkEdgeEnd}
-			on:edgelinkenter={linkEdgeEnter}
+			on:linkstart={linkEdgeStart}
+			on:linkend={linkEdgeEnd}
+			on:linkoverlap={linkEdgeOverlap}
 		/>
 	</div>
 </div>

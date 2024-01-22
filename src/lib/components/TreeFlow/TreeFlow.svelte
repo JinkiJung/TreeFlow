@@ -9,6 +9,7 @@
 	import { newNode } from "$lib/interaction/newNode";
 	import { DefaultNode } from "../Node";
 	import type { ResizableContainer } from "../Container";
+	import type { Container } from "../types/container";
     
 	export let width: number = 0;
 	export let height: number = 0;
@@ -134,6 +135,45 @@
 		}
 	}
 
+	const getResizableContainers = (nodes: NodeData[]): Container[] => {
+		return nodes.filter((node) => node.children?.length).map((node) => {
+			return {
+				owningNode: node.id!,
+				size: {width: node.size.width,
+					// TODO: this should be a resizable container's height
+				height: node.size.height },
+				position: {x: node.position.x,
+				y: node.position.y }
+			} as Container;
+		});
+	}
+
+	const calculateOverlap = (rect1: NodeData, rect2: Container): number => {
+		const xOverlap = Math.max(0, Math.min(rect1.position.x + rect1.size.width, rect2.position.x + rect2.size.width) - Math.max(rect1.position.x, rect2.position.x));
+		const yOverlap = Math.max(0, Math.min(rect1.position.y + rect1.size.height, rect2.position.y + rect2.size.height) - Math.max(rect1.position.y, rect2.position.y));
+
+		if (xOverlap > 0 && yOverlap > 0) {
+			return xOverlap * yOverlap;
+		} else {
+			return 0;
+		}
+  	}
+
+	const checkOverlap = (target: NodeData, nodes: NodeData[]) => {
+		const containers = getResizableContainers(nodes);
+
+		containers.filter((container) => {
+			const area = calculateOverlap(target, container);
+			if (area > 0) {
+				// find the container having the maximum area 
+				// and return the container's owningNode
+				// then select nodecanvas by using owningNode
+				// and adjust highlight
+			}
+			// adjust highlight to the default container
+		} )
+	} 
+
 	const selectNode = (node: NodeData) => {
 		selectedNodeIds = [node.id!];
 	};
@@ -206,7 +246,7 @@
 		}
 	}
 
-	const linkEdgeEnter = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
+	const linkEdgeOverlap = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
 		event.detail.event.stopPropagation();
 		if (dragEdgeLink && newEdge) {
 			if (newEdge.fromId !== event.detail.node.id) {
@@ -361,29 +401,29 @@
 	<div bind:this={container} style="position: relative; width: {width}px; height: {height}px;">
 		<EdgeCanvas {width} {height} hasBackground={true}>
 			{#each edges as edge}
-				<Edge edge={edge} />
+				<Edge {edge} />
 			{/each}
 			{#if newEdge}
 				<Edge edge={newEdge} />
 			{/if}
 		</EdgeCanvas>
-		<NodeCanvas initWidth={width} initHeight={height}>
+		<NodeCanvas>
 			{#each nodes as node}
-			{#if node.parent === undefined}
-				<DefaultNode 
-					{node} 
-					selected={selectedNodeIds.includes(node.id)}
-					on:nodedragstart={dragNodeStart}
-					on:nodedragstop={dragNodeStop}
-					handleMousedown={dragNodeStart}
-					{linkEdgeStart}
-					{linkEdgeEnd}
-					{linkEdgeEnter}
-					{resizeStart}
-					{addChild}
+				{#if node.parent === undefined}
+					<DefaultNode
+						{node}
+						selected={selectedNodeIds.includes(node.id)}
+						on:nodedragstart={dragNodeStart}
+						on:nodedragstop={dragNodeStop}
+						handleMousedown={dragNodeStart}
+						{linkEdgeStart}
+						{linkEdgeEnd}
+						{linkEdgeOverlap}
+						{resizeStart}
+						{addChild}
 					/>
-			{/if}
+				{/if}
 			{/each}
-		</NodeCanvas>  
+		</NodeCanvas>
 	</div>
 </div>

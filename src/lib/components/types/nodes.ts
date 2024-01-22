@@ -5,6 +5,7 @@ export type NodeData<T = any> = {
     position: XYPosition;
     size: Size;
     data: T;
+    depth?: number;
     hidden?: boolean;
     selected?: boolean;
     dragging?: boolean;

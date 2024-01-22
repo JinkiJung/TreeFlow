@@ -22,12 +22,10 @@
 <div
     id={id}
     style="position: relative; top: 0; left: 0; width: 100%; height: 100%; background:{backgroundColor};"
-    class="nodecanvas {focused ? 'focused' : ''}">
+    class="nodecanvas">
     <slot />
 </div>
 
 <style>
-    .focused {
-        outline: 2px solid red;
-    }
+    
 </style>

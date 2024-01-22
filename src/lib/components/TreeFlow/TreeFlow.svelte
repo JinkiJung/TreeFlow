@@ -22,7 +22,8 @@
 
 	let selectedNodeIds: string[] = [];
 	let newEdge: EdgeData | null = null;
-	
+	let hoveredNodeCanvas: HTMLElement | null = null;
+
 	let offsetX = 0;
 	let offsetY = 0;
 	let offsetXPlain = 0;
@@ -34,6 +35,7 @@
 	let dragContainer = false;
 	let resizeDirection: ResizeDirection = ResizeDirection.None;
 	let newEdgeCandidate: EdgeData | null = null;
+	let nodeCanvasColor: string = 'rgba(230,230,230,0.0)';
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
@@ -74,6 +76,41 @@
 		offsetY = pos.y - nodeSelected.position.y;
 		document.onmousemove = dragNodeMove;
 		document.onmouseleave = handleMouseleave;
+	}
+
+	const dragNodeMove = ( event: MouseEvent | TouchEvent) => {
+		event.stopPropagation();
+		containerBounds = container.getBoundingClientRect();
+		let pos = getEventPosition(event, containerBounds);
+		if (dragEdgeLink && newEdge) {
+			updateNewEdge(pos);
+		}
+		else if (dragNode) {
+			updateNodePosition(pos);
+			showParent(event as MouseEvent);
+		}
+	}
+
+	const showParent = ( event: MouseEvent) => {
+		event.stopPropagation();
+		containerBounds = container.getBoundingClientRect();
+		let pos = getEventPosition(event, containerBounds);
+		// pick top overlaid nodecanvas
+		const nodeCanvas = pickTopNodeCanvas(event.clientX, event.clientY);
+		// change nodeCanvas background color to blue
+		if (nodeCanvas) {
+			if (hoveredNodeCanvas !== nodeCanvas) {
+				hoveredNodeCanvas?.style.setProperty('box-shadow', '0px 0px 0px 0px #f00');
+			}
+			nodeCanvas?.style.setProperty('box-shadow', '0px 0px 0px 4px #f00');
+			hoveredNodeCanvas = nodeCanvas;
+		}
+	}
+
+	const pickTopNodeCanvas = (offsetX: number, offsetY: number): HTMLElement | undefined => {
+		// filter elements that are not nodecanvas
+		const elements = document.elementsFromPoint(offsetX, offsetY);
+		return Array.from(elements).filter((element) => element.classList.contains('nodecanvas')).shift() as HTMLElement;
 	}
 
 	const handleMouseleave = (event: MouseEvent | TouchEvent) => {
@@ -120,18 +157,6 @@
 					y: pos.y,
 				};
 			}
-		}
-	}
-
-	const dragNodeMove = ( event: MouseEvent | TouchEvent) => {
-		event.stopPropagation();
-		containerBounds = container.getBoundingClientRect();
-		let pos = getEventPosition(event, containerBounds);
-		if (dragEdgeLink && newEdge) {
-			updateNewEdge(pos);
-		}
-		else if (dragNode) {
-			updateNodePosition(pos);
 		}
 	}
 
@@ -187,6 +212,10 @@
 		selectedNodeIds = [];
 		if (newEdge) {
 			newEdge = null;
+		}
+		if (hoveredNodeCanvas) {
+			hoveredNodeCanvas.style.setProperty('box-shadow', '0px 0px 0px 0px #f00');
+			hoveredNodeCanvas = null;
 		}
 	}
 
@@ -380,6 +409,7 @@
 				label: 'node ' + (nodes.length + 1),
 			},
 			parent: parent?.id,
+			depth: parent?.depth ? parent.depth + 1 : 0,	
 		};
 		nodeStore.set([...nodes, newNode]);
 		return newNode;
@@ -407,12 +437,12 @@
 				<Edge edge={newEdge} />
 			{/if}
 		</EdgeCanvas>
-		<NodeCanvas>
+		<NodeCanvas backgroundColor={nodeCanvasColor}>
 			{#each nodes as node}
 				{#if node.parent === undefined}
 					<DefaultNode
 						{node}
-						selected={selectedNodeIds.includes(node.id)}
+						selected={selectedNodeIds.includes(node.id? node.id : '')}
 						on:nodedragstart={dragNodeStart}
 						on:nodedragstop={dragNodeStop}
 						handleMousedown={dragNodeStart}

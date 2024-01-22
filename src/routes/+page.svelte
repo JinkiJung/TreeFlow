@@ -46,7 +46,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 0,
         },
         {
             id: 'node2',
@@ -72,7 +73,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 0,
         },
 		{
             id: 'node3',
@@ -98,7 +100,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 0,
         },
 		{
 			id: 'node4',
@@ -125,7 +128,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 1,
 		}
     ] as NodeData[];
 	nodeStore.set(nodeItems);

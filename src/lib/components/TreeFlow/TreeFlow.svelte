@@ -10,6 +10,7 @@
 	import { DefaultNode } from "../Node";
 	import type { ResizableContainer } from "../Container";
 	import type { Container } from "../types/container";
+	import { NODECANVAS_SURFIX } from "../constant";
     
 	export let width: number = 0;
 	export let height: number = 0;
@@ -96,7 +97,7 @@
 		containerBounds = container.getBoundingClientRect();
 		let pos = getEventPosition(event, containerBounds);
 		// pick top overlaid nodecanvas
-		const nodeCanvas = pickTopNodeCanvas(event.clientX, event.clientY);
+		const nodeCanvas = pickTopNodeCanvas(event.clientX, event.clientY, selectedNodeIds[0]);
 		// change nodeCanvas background color to blue
 		if (nodeCanvas) {
 			if (hoveredNodeCanvas !== nodeCanvas) {
@@ -107,10 +108,15 @@
 		}
 	}
 
-	const pickTopNodeCanvas = (offsetX: number, offsetY: number): HTMLElement | undefined => {
+	// filter currently dragging element
+	const isNotMyNodeCanvas = (id: string, nodeCanvas: HTMLElement) => {
+		return nodeCanvas.getAttribute('id') !== NODECANVAS_SURFIX + id;
+	}
+
+	const pickTopNodeCanvas = (offsetX: number, offsetY: number, id: string): HTMLElement | undefined => {
 		// filter elements that are not nodecanvas
 		const elements = document.elementsFromPoint(offsetX, offsetY);
-		return Array.from(elements).filter((element) => element.classList.contains('nodecanvas')).shift() as HTMLElement;
+		return Array.from(elements).filter((element) => isNotMyNodeCanvas(id, element as HTMLElement) && element.classList.contains('nodecanvas')).shift() as HTMLElement;
 	}
 
 	const handleMouseleave = (event: MouseEvent | TouchEvent) => {
@@ -160,45 +166,6 @@
 		}
 	}
 
-	const getResizableContainers = (nodes: NodeData[]): Container[] => {
-		return nodes.filter((node) => node.children?.length).map((node) => {
-			return {
-				owningNode: node.id!,
-				size: {width: node.size.width,
-					// TODO: this should be a resizable container's height
-				height: node.size.height },
-				position: {x: node.position.x,
-				y: node.position.y }
-			} as Container;
-		});
-	}
-
-	const calculateOverlap = (rect1: NodeData, rect2: Container): number => {
-		const xOverlap = Math.max(0, Math.min(rect1.position.x + rect1.size.width, rect2.position.x + rect2.size.width) - Math.max(rect1.position.x, rect2.position.x));
-		const yOverlap = Math.max(0, Math.min(rect1.position.y + rect1.size.height, rect2.position.y + rect2.size.height) - Math.max(rect1.position.y, rect2.position.y));
-
-		if (xOverlap > 0 && yOverlap > 0) {
-			return xOverlap * yOverlap;
-		} else {
-			return 0;
-		}
-  	}
-
-	const checkOverlap = (target: NodeData, nodes: NodeData[]) => {
-		const containers = getResizableContainers(nodes);
-
-		containers.filter((container) => {
-			const area = calculateOverlap(target, container);
-			if (area > 0) {
-				// find the container having the maximum area 
-				// and return the container's owningNode
-				// then select nodecanvas by using owningNode
-				// and adjust highlight
-			}
-			// adjust highlight to the default container
-		} )
-	} 
-
 	const selectNode = (node: NodeData) => {
 		selectedNodeIds = [node.id!];
 	};
@@ -214,6 +181,7 @@
 			newEdge = null;
 		}
 		if (hoveredNodeCanvas) {
+			console.log(hoveredNodeCanvas.getAttribute('id'));
 			hoveredNodeCanvas.style.setProperty('box-shadow', '0px 0px 0px 0px #f00');
 			hoveredNodeCanvas = null;
 		}
@@ -437,7 +405,7 @@
 				<Edge edge={newEdge} />
 			{/if}
 		</EdgeCanvas>
-		<NodeCanvas backgroundColor={nodeCanvasColor}>
+		<NodeCanvas backgroundColor={nodeCanvasColor} owningNode={'root'} height={height}>
 			{#each nodes as node}
 				{#if node.parent === undefined}
 					<DefaultNode

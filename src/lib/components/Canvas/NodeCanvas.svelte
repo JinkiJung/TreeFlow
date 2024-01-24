@@ -3,9 +3,12 @@
 	import { nodeStore } from "../stores";
 	import type { NodeData } from "../types";
     import ShortUniqueId from "short-unique-id";
+	import { NODECANVAS_SURFIX } from "../constant";
 
-    export let backgroundColor: string = 'rgba(230,230,230,0.0)';
-    let id = (new ShortUniqueId({ length: 10 })).rnd();
+    export let backgroundColor: string = 'rgba(230,230,230,0.1)';
+    export let owningNode = '';
+    export let height= 0;
+    let id = NODECANVAS_SURFIX + owningNode;
     let nodes: NodeData[] = [];
     let focused: boolean = false;
     
@@ -21,7 +24,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     id={id}
-    style="position: relative; top: 0; left: 0; width: 100%; height: 100%; background:{backgroundColor};"
+    style="position: relative; top: 0; left: 0; width: 100%; height: {height}px; background:{backgroundColor};"
     class="nodecanvas">
     <slot />
 </div>

@@ -130,9 +130,7 @@
 	bind:this={container}
 	role="button"
 	class="iil-container unselectable"
-	style=" top: {y}px; left: {x}px; background: {backgroundColor}; outline: {selected
-		? '2'
-		: '1'}px solid {selected ? 'red' : 'black'};"
+	style=" top: {y}px; left: {x}px;"
 	on:click={(event) => dispatch('nodeclick', { node, event })}
 	on:keydown={(event) => {}}
 	on:mousedown={(event) => dispatch('nodedragstart', { node, event })}
@@ -143,6 +141,15 @@
 	on:contextmenu={(event) => dispatch('nodecontextmenu', { node, event })}
 	tabindex="0"
 >
+	<ResizableContainer
+		owningNode={node.id}
+		{width}
+		{height}
+		on:resizestart={resizeStart}
+	>
+	<div style="background: {backgroundColor}; outline: {selected
+		? '2'
+		: '1'}px solid {selected ? 'red' : 'black'};">
 	<div class="d-flex justify-content-between iil-section condition">
 		<EdgeLink
 			edgelinkSize={sectionHeight}
@@ -153,7 +160,6 @@
 			on:linkend={linkEdgeEnd}
 			on:linkoverlap={linkEdgeOverlap}
 		/>
-		<div></div>
 	</div>
 	<div class="iil-section">
 		<input
@@ -167,29 +173,29 @@
 	</div>
 	<div class="d-flex justify-content-between iil-section">
 		{#if expanded}
-			<ResizableContainer
+			<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'}
 				owningNode={node.id}
-				{width}
-				height={height - sectionHeight * 3}
-				on:resizestart={resizeStart}
-			>
-				<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'}>
-					{#each children || [] as node}
-						<DefaultNode
-							{node}
-							on:nodedragstart={handleMousedown}
-							{linkEdgeStart}
-							{linkEdgeEnd}
-							{linkEdgeOverlap}
-							{addChild}
-							{handleMousedown}
-							{resizeStart}
-						/>
-					{/each}
-				</NodeCanvas>
-			</ResizableContainer>
+				height={height - sectionHeight*3}>
+				{#each children || [] as node}
+					<DefaultNode
+						{node}
+						on:nodedragstart={handleMousedown}
+						{linkEdgeStart}
+						{linkEdgeEnd}
+						{linkEdgeOverlap}
+						{addChild}
+						{handleMousedown}
+						{resizeStart}
+					/>
+				{/each}
+			</NodeCanvas>
 		{:else}
+		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'}
+			owningNode={node.id}
+			height={10}>
 			<button class="addBtn" on:click={(e) => onAddChild()}>+</button>
+		</NodeCanvas>
+			
 		{/if}
 	</div>
 	<div class="d-flex justify-content-between iil-section condition">
@@ -204,6 +210,8 @@
 			on:linkoverlap={linkEdgeOverlap}
 		/>
 	</div>
+</div>
+	</ResizableContainer>
 </div>
 
 <style>

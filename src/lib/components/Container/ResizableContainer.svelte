@@ -6,6 +6,8 @@
     export let width = 400;
     export let height = 200;
     export let owningNode: string = '';
+    export let backgroundColor: string = 'rgba(230,230,230,0.1)';
+    export let highlightOutline: boolean = false;
 
     const boundary: number = 5;
     
@@ -22,7 +24,9 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div 
     bind:this={container}
-    style="position: relative; width: {width}px; height: {height}px;"
+    style="position: relative; width: {width}px; height: {height}px; background: {backgroundColor}; outline: {highlightOutline ? '2' : '1'}px solid {highlightOutline
+        ? 'red'
+        : 'black'};"
 >
     <div class="hoverable"
         style="position: absolute; top: 0; left: 0; right: 0; height: {boundary}px; cursor: ns-resize;"
@@ -40,7 +44,7 @@
         style="position: absolute; top: 0; bottom: 0; right: 0; width: {boundary}px; cursor: ew-resize;"
         on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Right, event })}
         role="button" tabindex="0" />
-    <div style="position: absolute; inset: {boundary}px;">
+    <div style="position: absolute;">
         <slot />
     </div>
     

@@ -25,7 +25,6 @@
 	}>();
 
 	export let node: NodeData;
-	export let selected: boolean = false;
 	export let backgroundColor: string = 'rgba(0,0,0,0.0)';
 	export let linkEdgeStart: (
 		e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>
@@ -51,13 +50,15 @@
 	let id = node.id;
 	let x = node.position.x;
 	let y = node.position.y;
+	let selected: boolean = false;
+	let children: NodeData[] = [];
+	let numberOfSections: number = children.length > 0 ? 3 : 4;
 	let width = node.size.width;
-	let height = node.size.height;
+	let height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
 	let data = node.data;
 	let container: HTMLDivElement;
 	let actValue: string = data.label;
 	let actInput: HTMLInputElement;
-	let children: NodeData[] = [];
 	let expanded: boolean = false;
 	let nodes: NodeData[];
 
@@ -65,7 +66,8 @@
 		x = node.position.x;
 		y = node.position.y;
 		width = node.size.width;
-		height = node.size.height;
+		height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
+		selected = node.selected!;
 		data = node.data;
 	}
 
@@ -90,11 +92,9 @@
 	const adjustSize = () => {
 		const size = calculateCanvasSize();
 		if (size.width !== node.size.width && size.height !== node.size.height) {
-			nodeStore.set(
-				nodes.map((n) => 
-					n.id === node.id ? { ...node, size} : n));
+			nodeStore.set(nodes.map((n) => (n.id === node.id ? { ...node, size } : n)));
 		}
-	}
+	};
 
 	const calculateCanvasSize = (): Size => {
 		if (node.children === undefined) return { width: 0, height: 0 };
@@ -114,7 +114,7 @@
 
 		const size = {
 			width: maxX + 20,
-			height: maxY + 40 + sectionHeight * 3
+			height: maxY + 40 + sectionHeight * numberOfSections
 		};
 		return size;
 	};
@@ -141,76 +141,66 @@
 	on:contextmenu={(event) => dispatch('nodecontextmenu', { node, event })}
 	tabindex="0"
 >
-	<ResizableContainer
-		owningNode={node.id}
-		{width}
-		{height}
-		on:resizestart={resizeStart}
-	>
-	<div style="background: {backgroundColor}; outline: {selected
-		? '2'
-		: '1'}px solid {selected ? 'red' : 'black'};">
-	<div class="d-flex justify-content-between iil-section condition">
-		<EdgeLink
-			edgelinkSize={sectionHeight}
-			{node}
-			data={node.startLinker}
-			type={EdgeLinkTypes.Start}
-			on:linkstart={linkEdgeStart}
-			on:linkend={linkEdgeEnd}
-			on:linkoverlap={linkEdgeOverlap}
-		/>
-	</div>
-	<div class="iil-section">
-		<input
-			bind:this={actInput}
-			bind:value={actValue}
-			type="text"
-			class="p-0"
-			style="width: {width}px; height: {sectionHeight}px; border: 0px solid black;"
-			on:click={(event) => actInput.focus()}
-		/>
-	</div>
-	<div class="d-flex justify-content-between iil-section">
-		{#if expanded}
-			<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'}
-				owningNode={node.id}
-				height={height - sectionHeight*3}>
-				{#each children || [] as node}
-					<DefaultNode
+	<ResizableContainer owningNode={node.id} {width} {height}
+		{backgroundColor} highlightOutline={selected} on:resizestart={resizeStart}>
+		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'} owningNode={node.id} {width} {height}>
+				<div class="d-flex justify-content-between iil-section condition" style="height: {sectionHeight}px;">
+					<EdgeLink
+						edgelinkSize={sectionHeight}
 						{node}
-						on:nodedragstart={handleMousedown}
-						{linkEdgeStart}
-						{linkEdgeEnd}
-						{linkEdgeOverlap}
-						{addChild}
-						{handleMousedown}
-						{resizeStart}
+						data={node.startLinker}
+						type={EdgeLinkTypes.Start}
+						on:linkstart={linkEdgeStart}
+						on:linkend={linkEdgeEnd}
+						on:linkoverlap={linkEdgeOverlap}
 					/>
-				{/each}
-			</NodeCanvas>
-		{:else}
-		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'}
-			owningNode={node.id}
-			height={10}>
-			<button class="addBtn" on:click={(e) => onAddChild()}>+</button>
+				</div>
+				<div class="iil-section">
+					<input
+						bind:this={actInput}
+						bind:value={actValue}
+						type="text"
+						class="p-0 m-0"
+						style="width: 100%; height: {sectionHeight}px; border: 0px solid black;"
+						on:click={(event) => actInput.focus()}
+					/>
+				</div>
+				<div class="d-flex justify-content-between iil-section"
+					style="width: {width}px; height: {height - sectionHeight * (numberOfSections - 1)}px;">
+					{#if expanded}
+						{#each children || [] as node}
+							<DefaultNode
+								{node}
+								on:nodedragstart={handleMousedown}
+								{linkEdgeStart}
+								{linkEdgeEnd}
+								{linkEdgeOverlap}
+								{addChild}
+								{handleMousedown}
+								{resizeStart}
+								{backgroundColor}
+							/>
+						{/each}
+					{:else}
+						<button class="addBtn"
+							style="width: {width}px; height: {sectionHeight}px;"
+							on:click={(e) => onAddChild()}>+</button>
+					{/if}
+				</div>
+				<div class="d-flex justify-content-between iil-section condition"
+					style="height: {sectionHeight}px;">
+					<div></div>
+					<EdgeLink
+						edgelinkSize={sectionHeight}
+						{node}
+						data={node.endLinker}
+						type={EdgeLinkTypes.End}
+						on:linkstart={linkEdgeStart}
+						on:linkend={linkEdgeEnd}
+						on:linkoverlap={linkEdgeOverlap}
+					/>
+				</div>
 		</NodeCanvas>
-			
-		{/if}
-	</div>
-	<div class="d-flex justify-content-between iil-section condition">
-		<div></div>
-		<EdgeLink
-			edgelinkSize={sectionHeight}
-			{node}
-			data={node.endLinker}
-			type={EdgeLinkTypes.End}
-			on:linkstart={linkEdgeStart}
-			on:linkend={linkEdgeEnd}
-			on:linkoverlap={linkEdgeOverlap}
-		/>
-	</div>
-</div>
 	</ResizableContainer>
 </div>
 
@@ -218,12 +208,12 @@
 	.iil-container {
 		position: absolute;
 		margin: 0px;
-		padding: 0px;
 	}
 
 	.iil-section {
 		margin: 0px;
 		padding: 0px;
+		border: 0px;
 	}
 
 	.condition {
@@ -235,8 +225,6 @@
 	.addBtn {
 		background-color: #007bff;
 		color: white;
-		width: 100%;
-		height: 10px;
 		border: 0px;
 		font-size: 8px;
 	}

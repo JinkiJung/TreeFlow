@@ -150,7 +150,7 @@
 		TreeFlow Svelte Demo
 	</h1>
 	<div class="container" >
-		<TreeFlow bind:this={treeflow} width={600} height={400}/>
+		<TreeFlow bind:this={treeflow} width={800} height={600}/>
 		<button on:click={(e) => treeflow.addNode()}
 		>create new</button>
 	</div>
@@ -169,5 +169,4 @@
 	h1 {
 		width: 100%;
 	}
-
 </style>

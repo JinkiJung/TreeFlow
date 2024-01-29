@@ -7,6 +7,7 @@
 
     export let backgroundColor: string = 'rgba(230,230,230,0.1)';
     export let owningNode = '';
+    export let width= 0;
     export let height= 0;
     let id = NODECANVAS_SURFIX + owningNode;
     let nodes: NodeData[] = [];
@@ -24,11 +25,13 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     id={id}
-    style="position: relative; top: 0; left: 0; width: 100%; height: {height}px; background:{backgroundColor};"
+    style="position: relative; top: 0; left: 0; width: {width}px; height: {height}px; background:{backgroundColor};"
     class="nodecanvas">
     <slot />
 </div>
 
 <style>
-    
+    *:after, *:before{
+		box-sizing: content-box !important;
+	}
 </style>

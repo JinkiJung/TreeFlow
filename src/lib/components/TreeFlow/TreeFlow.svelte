@@ -93,6 +93,75 @@
 		}
 	}
 
+	const dragNodeEnd = () => {
+		dragNode = false;
+		dragEdgeLink = false;
+		document.onmousemove = null;
+		document.onmouseleave = null;
+		document.onmouseenter = null;
+		// if there is selected node IDs, make false to all selected node's selected property
+		if (selectedNodeIds.length) {
+			nodeStore.set(nodes.map((node) => {
+				if (selectedNodeIds.includes(node.id!)) {
+					return {
+						...node,
+						selected: false,
+					} as NodeData; // Explicitly define the type here
+				}
+				return node;
+			}));
+			if (hoveredNodeCanvas) {
+				// get hovered node canvas id 
+				const parentCandidate = hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '') === 'root' ? undefined : hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '');
+				// first fetch parent IDs into array from selected nodes in order to empty children of them
+				const currentParentId = nodes.filter((node) => selectedNodeIds.includes(node.id!)).map((node) => node.parent).pop();
+				console.log(parentCandidate);
+				console.log(currentParentId);
+				if (parentCandidate !== currentParentId){
+					console.log("work!");
+					// get current parent node's position if currentParentId is not undefined
+					const parentPosition = currentParentId ? nodes.filter((node) => currentParentId.includes(node.id!)).pop()?.position : undefined;
+					console.log(parentPosition);
+					// update the node's parent, if id is root, then parent is undefined, else put the id as parent
+					nodeStore.set(nodes.map((node) => {
+						if (currentParentId && currentParentId.includes(node.id!)) {
+							return {
+								...node,
+								children: [],
+								size: {
+									width: node.size.width,
+									height: sectionHeight * 4,
+								},
+							} as NodeData; // Explicitly define the type here
+						}
+						if (selectedNodeIds.includes(node.id!)) {
+							return {
+								...node,
+								position: {
+									x: node.position.x + parentPosition?.x!,
+									y: node.position.y + parentPosition?.y! + sectionHeight * 2,
+								},		
+								parent: parentCandidate === 'root' ? undefined : parentCandidate,
+							} as NodeData; // Explicitly define the type here
+						}
+						return node;
+					}));
+				}
+				/*
+				if (currentParentId && parentCandidate !== currentParentId)
+					console.log(currentParentId);
+				
+				*/
+				hoveredNodeCanvas.style.setProperty('box-shadow', '0px 0px 0px 0px #09A9A9');
+				hoveredNodeCanvas = null;
+			}
+		}
+		selectedNodeIds = [];
+		if (newEdge) {
+			newEdge = null;
+		}
+	}
+
 	const showParent = ( event: MouseEvent) => {
 		event.stopPropagation();
 		containerBounds = container.getBoundingClientRect();
@@ -171,34 +240,6 @@
 	const selectNode = (node: NodeData) => {
 		selectedNodeIds = [node.id!];
 	};
-
-	const dragNodeEnd = () => {
-		dragNode = false;
-		dragEdgeLink = false;
-		document.onmousemove = null;
-		document.onmouseleave = null;
-		document.onmouseenter = null;
-		// if there is selected node IDs, make false to all selected node's selected property
-		if (selectedNodeIds.length) {
-			nodeStore.set(nodes.map((node) => {
-				if (selectedNodeIds.includes(node.id!)) {
-					return {
-						...node,
-						selected: false,
-					} as NodeData; // Explicitly define the type here
-				}
-				return node;
-			}));
-		}
-		selectedNodeIds = [];
-		if (newEdge) {
-			newEdge = null;
-		}
-		if (hoveredNodeCanvas) {
-			hoveredNodeCanvas.style.setProperty('box-shadow', '0px 0px 0px 0px #09A9A9');
-			hoveredNodeCanvas = null;
-		}
-	}
 
 	const linkEdgeStart = (event: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent; }>) => {
 		dragEdgeLink = true;

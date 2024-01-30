@@ -37,6 +37,7 @@
 	let resizeDirection: ResizeDirection = ResizeDirection.None;
 	let newEdgeCandidate: EdgeData | null = null;
 	let nodeCanvasColor: string = 'rgba(230,230,230,0.0)';
+	let nodeBackgroundColor: string = 'rgb(230,230,230)';
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
@@ -422,6 +423,7 @@
 				{#if node.parent === undefined}
 					<DefaultNode
 						{node}
+						backgroundColor={nodeBackgroundColor}
 						on:nodedragstart={dragNodeStart}
 						on:nodedragstop={dragNodeEnd}
 						handleMousedown={dragNodeStart}

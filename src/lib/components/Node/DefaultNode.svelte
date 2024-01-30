@@ -50,6 +50,7 @@
 	let id = node.id;
 	let x = node.position.x;
 	let y = node.position.y;
+	let hasParent = node.parent !== undefined;
 	let selected: boolean = false;
 	let children: NodeData[] = [];
 	let numberOfSections: number = children.length > 0 ? 3 : 4;
@@ -61,10 +62,11 @@
 	let actInput: HTMLInputElement;
 	let expanded: boolean = false;
 	let nodes: NodeData[];
+	let heightOffset: number = sectionHeight * 2;
 
 	$: {
 		x = node.position.x;
-		y = node.position.y;
+		y = hasParent ? node.position.y + heightOffset : node.position.y;
 		width = node.size.width;
 		height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
 		selected = node.selected!;

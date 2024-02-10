@@ -33,7 +33,8 @@
 				label: 'node 1',
 			},
 			children: [
-				'node4'
+				'node4',
+				'node3'
 			],
 			startLinker: {
 				type: EdgeLinkTypes.Start,
@@ -89,6 +90,7 @@
 			data: {
 				label: 'node 3',
 			},
+			parent: 'node1',
 			startLinker: {
 				type: EdgeLinkTypes.Start,
 				connected: false,

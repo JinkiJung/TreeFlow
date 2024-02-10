@@ -12,6 +12,7 @@
 	import NodeCanvas from '../Canvas/NodeCanvas.svelte';
 	import { DefaultNode } from '.';
 	import { ResizableContainer } from '../Container';
+	import { newNode } from '$lib/interaction/newNode';
 
 	const dispatch = createEventDispatcher<{
 		nodeclick: { node: NodeData; event: MouseEvent | TouchEvent };
@@ -24,7 +25,8 @@
 		nodemousemove: { node: NodeData; event: MouseEvent | TouchEvent };
 	}>();
 
-	export let node: NodeData;
+	export let nodes: NodeData[] = [];
+	export let nodeId: string = '';
 	export let backgroundColor: string = 'rgba(0,0,0,0.0)';
 	export let linkEdgeStart: (
 		e: CustomEvent<{ node: NodeData; type: EdgeLinkTypes; event: MouseEvent | TouchEvent }>
@@ -38,6 +40,7 @@
 	export let handleMousedown: (
 		e: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent }>
 	) => void;
+	export let handleMouseup: () => void;
 	export let resizeStart: (
 		e: CustomEvent<{ nodeId: string; direction: ResizeDirection; event: MouseEvent | TouchEvent }>
 	) => void;
@@ -47,7 +50,7 @@
 		dispatch('nodeclick', { node, event });
 	}
 
-	let id = node.id;
+	let node: NodeData = newNode();
 	let x = node.position.x;
 	let y = node.position.y;
 	let hasParent = node.parent !== undefined;
@@ -61,47 +64,55 @@
 	let actValue: string = data.label;
 	let actInput: HTMLInputElement;
 	let expanded: boolean = false;
-	let nodes: NodeData[];
 	let heightOffset: number = sectionHeight * 2;
 
 	$: {
-		x = node.position.x;
-		y = hasParent ? node.position.y + heightOffset : node.position.y;
-		width = node.size.width;
-		height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
-		selected = node.selected!;
-		data = node.data;
+		node = nodes.filter((n) => n.id === nodeId).pop()!;
+		console.log(nodes);
+		console.log(nodeId);
+		if (node) {
+			children = nodes.filter((n) => n.parent === nodeId);
+			expanded = children.length > 0;
+			data = node.data;
+
+			hasParent = node.parent !== undefined;
+			x = node.position.x;
+			y = hasParent ? node.position.y + heightOffset : node.position.y;
+			width = node.size.width;
+			height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
+			data = node.data;
+			actValue = data.label + " " + node.position.y.toString();//data.label;
+			selected = node.selected!;
+			console.trace("node.id: " + node.id);
+			console.log("node.position: " + node.position.x + " " + node.position.y);
+			console.log("node.position: " + x + " " + y);
+		}
 	}
 
 	onMount(() => {
-		children = nodes.filter((n) => n.parent === node.id);
-		if (children.length) {
+		updateChildren();
+		adjustSize();
+	});
+
+	const updateChildren = () => {
+		const prevChildrenLength = children.length;
+		children = nodes.filter((n) => n.parent === nodeId);
+		if (prevChildrenLength !== children.length) {
 			adjustSize();
-		}
-	});
-
-	onDestroy(() => {
-		unsubscribeNodeStore();
-	});
-
-	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
-		nodes = value;
-
-		children = nodes.filter((n) => n.parent === node.id);
-		expanded = children.length > 0;
-	});
-
-	const adjustSize = () => {
-		const size = calculateCanvasSize();
-		if (size.width !== node.size.width && size.height !== node.size.height) {
-			nodeStore.set(nodes.map((n) => (n.id === node.id ? { ...node, size } : n)));
 		}
 	};
 
-	const calculateCanvasSize = (): Size => {
-		if (node.children === undefined) return { width: 0, height: 0 };
+	const adjustSize = () => {
+		const size = calculateCanvasSize(children.map((n) => n.id!));
+		if (size.width !== node.size.width && size.height !== node.size.height) {
+			nodeStore.set(nodes.map((n) => (n.id === nodeId ? { ...node, size } : n)));
+		}
+	};
 
-		const nodePositions = node.children!.map((nodeId) => {
+	const calculateCanvasSize = (childrenIds: string[]): Size => {
+		if (childrenIds.length === 0) return { width, height };
+
+		const nodePositions = childrenIds!.map((nodeId) => {
 			const node = nodes.filter((n) => n.id === nodeId).pop();
 			if (node)
 				return {
@@ -128,7 +139,7 @@
 </script>
 
 <div
-	{id}
+	id={nodeId}
 	bind:this={container}
 	role="button"
 	class="iil-container unselectable"
@@ -143,9 +154,9 @@
 	on:contextmenu={(event) => dispatch('nodecontextmenu', { node, event })}
 	tabindex="0"
 >
-	<ResizableContainer owningNode={node.id} {width} {height}
+	<ResizableContainer owningNode={nodeId} {width} {height}
 		{backgroundColor} highlightOutline={selected} on:resizestart={resizeStart}>
-		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'} owningNode={node.id} {width} {height}>
+		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'} owningNode={nodeId} {width} {height}>
 				<div class="d-flex justify-content-between iil-section condition" style="height: {sectionHeight}px;">
 					<EdgeLink
 						edgelinkSize={sectionHeight}
@@ -170,17 +181,21 @@
 				<div class="d-flex justify-content-between iil-section"
 					style="width: {width}px; height: {height - sectionHeight * (numberOfSections - 1)}px;">
 					{#if expanded}
-						{#each children || [] as node}
+						{#each children || [] as n}
+						<h1>{n.position.x} {n.position.y}</h1>
 							<DefaultNode
-								{node}
+								{nodes}
+								nodeId={n.id}
+								{backgroundColor}
 								on:nodedragstart={handleMousedown}
+								on:nodedragstop={handleMouseup}
+								{handleMousedown}
+								{handleMouseup}
 								{linkEdgeStart}
 								{linkEdgeEnd}
 								{linkEdgeOverlap}
-								{addChild}
-								{handleMousedown}
 								{resizeStart}
-								{backgroundColor}
+								{addChild}
 							/>
 						{/each}
 					{:else}

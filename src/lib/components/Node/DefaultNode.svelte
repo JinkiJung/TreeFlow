@@ -68,8 +68,6 @@
 
 	$: {
 		node = nodes.filter((n) => n.id === nodeId).pop()!;
-		console.log(nodes);
-		console.log(nodeId);
 		if (node) {
 			children = nodes.filter((n) => n.parent === nodeId);
 			expanded = children.length > 0;
@@ -81,11 +79,8 @@
 			width = node.size.width;
 			height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
 			data = node.data;
-			actValue = data.label + " " + node.position.y.toString();//data.label;
+			actValue = data.label;
 			selected = node.selected!;
-			console.trace("node.id: " + node.id);
-			console.log("node.position: " + node.position.x + " " + node.position.y);
-			console.log("node.position: " + x + " " + y);
 		}
 	}
 
@@ -139,7 +134,7 @@
 </script>
 
 <div
-	id={nodeId}
+	id={node.id}
 	bind:this={container}
 	role="button"
 	class="iil-container unselectable"
@@ -154,9 +149,9 @@
 	on:contextmenu={(event) => dispatch('nodecontextmenu', { node, event })}
 	tabindex="0"
 >
-	<ResizableContainer owningNode={nodeId} {width} {height}
+	<ResizableContainer owningNode={node.id} {width} {height}
 		{backgroundColor} highlightOutline={selected} on:resizestart={resizeStart}>
-		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'} owningNode={nodeId} {width} {height}>
+		<NodeCanvas backgroundColor={'rgba(230,230,230,0.0)'} owningNode={node.id} {width} {height}>
 				<div class="d-flex justify-content-between iil-section condition" style="height: {sectionHeight}px;">
 					<EdgeLink
 						edgelinkSize={sectionHeight}
@@ -182,7 +177,6 @@
 					style="width: {width}px; height: {height - sectionHeight * (numberOfSections - 1)}px;">
 					{#if expanded}
 						{#each children || [] as n}
-						<h1>{n.position.x} {n.position.y}</h1>
 							<DefaultNode
 								{nodes}
 								nodeId={n.id}

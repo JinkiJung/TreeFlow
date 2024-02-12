@@ -9,9 +9,10 @@
     export let owningNode = '';
     export let width= 0;
     export let height= 0;
-    let id = NODECANVAS_SURFIX + owningNode;
     let nodes: NodeData[] = [];
     let focused: boolean = false;
+    
+    $: id = NODECANVAS_SURFIX + owningNode;
     
     const unsubscribeNodeStore = nodeStore.subscribe((value) => {
         nodes = value;
@@ -20,6 +21,8 @@
     onDestroy(() => {
         unsubscribeNodeStore();
     });
+
+
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->

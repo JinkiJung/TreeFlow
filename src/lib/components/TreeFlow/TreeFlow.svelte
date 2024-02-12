@@ -41,7 +41,6 @@
 
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
-		console.log(nodes);
 		// TODO: OPTIMIZED: if a node without edge is moved
 		if (edges && edges.length) {
 			const updated = updateAllEdgeEndpoints(edges, nodes);
@@ -112,46 +111,17 @@
 			}));
 			if (hoveredNodeCanvas) {
 				// get hovered node canvas id 
-				const nextParentId = hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '') === 'root' ? undefined : hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '');
+				const parentIdForUpdate = hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '') === 'root' ? undefined : hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '');
 				// first fetch parent IDs into array from selected nodes in order to empty children of them
-				const currentParentId = nodes.filter((node) => selectedNodeIds.includes(node.id!)).map((node) => node.parent).pop();
-				if (nextParentId !== currentParentId){
-					console.log("work!");
+				const parentIdOutdated = nodes.filter((node) => selectedNodeIds.includes(node.id!)).map((node) => node.parent).pop();
+				if (parentIdForUpdate !== parentIdOutdated){
 					// get current parent node's position if currentParentId is not undefined
-					const parentPosition = currentParentId ? nodes.filter((node) => currentParentId.includes(node.id!)).pop()?.position : undefined;
-					console.log("dragEnd");
-					console.log(nodes.map((node) => {
-						if (currentParentId && currentParentId.includes(node.id!)) {
-							const children = node.children?.filter((child) => !selectedNodeIds.includes(child));
-							return {
-								...node,
-								children,
-								size: children?.length ?
-									node.size :
-									{
-										width: node.size.width,
-										height: sectionHeight * 4,
-									},
-							} as NodeData; // Explicitly define the type here
-						}
-						if (nextParentId && nextParentId === node.id) {
-							return {
-								...node,
-								children: node.children ? [...node.children, ...selectedNodeIds] : selectedNodeIds,
-							} as NodeData; // Explicitly define the type here
-						}
-						if (selectedNodeIds.includes(node.id!)) {
-							return {
-								...node,
-								parent: nextParentId === 'root' ? undefined : nextParentId,
-							} as NodeData; // Explicitly define the type here
-						}
-						return node;
-					}));
+					const parentPositionOutdated = parentIdOutdated ? nodes.filter((node) => parentIdOutdated.includes(node.id!)).pop()?.position : {x: 0, y: 0};
+					const parentPositionForUpdate = parentIdForUpdate ? nodes.filter((node) => parentIdForUpdate === node.id).pop()?.position : {x: 0, y: 0};
 
 					// update the node's parent, if id is root, then parent is undefined, else put the id as parent
 					nodeStore.set(nodes.map((node) => {
-						if (currentParentId && currentParentId.includes(node.id!)) {
+						if (parentIdOutdated && parentIdOutdated.includes(node.id!)) {
 							const children = node.children?.filter((child) => !selectedNodeIds.includes(child));
 							return {
 								...node,
@@ -164,7 +134,7 @@
 									},
 							} as NodeData; // Explicitly define the type here
 						}
-						if (nextParentId && nextParentId === node.id) {
+						if (parentIdForUpdate && parentIdForUpdate === node.id) {
 							return {
 								...node,
 								children: node.children ? [...node.children, ...selectedNodeIds] : selectedNodeIds,
@@ -173,23 +143,21 @@
 						if (selectedNodeIds.includes(node.id!)) {
 							return {
 								...node,
-								position: nextParentId ?
-									node.position : 
+								position: parentIdForUpdate ?
 									{
-										x: node.position.x + parentPosition?.x!,
-										y: node.position.y + parentPosition?.y! + sectionHeight * 2,
+										x: node.position.x + parentPositionOutdated?.x! - parentPositionForUpdate?.x!,
+										y: node.position.y + parentPositionOutdated?.y! - parentPositionForUpdate?.y! - sectionHeight * 2,
+									} :
+									{
+										x: node.position.x + parentPositionOutdated?.x!,
+										y: node.position.y + parentPositionOutdated?.y! + sectionHeight * 2,
 									},	
-								parent: nextParentId === 'root' ? undefined : nextParentId,
+								parent: parentIdForUpdate === 'root' ? undefined : parentIdForUpdate,
 							} as NodeData; // Explicitly define the type here
 						}
 						return node;
 					}));
 				}
-				/*
-				if (currentParentId && parentCandidate !== currentParentId)
-					console.log(currentParentId);
-				
-				*/
 				hoveredNodeCanvas.style.setProperty('box-shadow', '0px 0px 0px 0px #09A9A9');
 				hoveredNodeCanvas = null;
 			}
@@ -221,10 +189,24 @@
 		return nodeCanvas.getAttribute('id') !== NODECANVAS_SURFIX + id;
 	}
 
+	// return true if two given html elements are overlapped
+	const isOverlapped = (element: HTMLElement, target: HTMLElement) => {
+		const rect1 = element.getBoundingClientRect();
+		const rect2 = target.getBoundingClientRect();
+		return !(
+			rect1.top > rect2.bottom ||
+			rect1.right < rect2.left ||
+			rect1.bottom < rect2.top ||
+			rect1.left > rect2.right
+		);
+	}
+
 	const pickTopNodeCanvas = (offsetX: number, offsetY: number, id: string): HTMLElement | undefined => {
 		// filter elements that are not nodecanvas
 		const elements = document.elementsFromPoint(offsetX, offsetY);
-		return Array.from(elements).filter((element) => isNotMyNodeCanvas(id, element as HTMLElement) && element.classList.contains('nodecanvas')).shift() as HTMLElement;
+		// return bool if region of selfCanvas and one of elements are overlapped
+		const selfCanvas: HTMLElement = document.getElementById(NODECANVAS_SURFIX + id)!;
+		return Array.from(elements).filter((element) => element.classList.contains('nodecanvas') && isNotMyNodeCanvas(id, element as HTMLElement) && isOverlapped(element as HTMLElement, selfCanvas)).shift() as HTMLElement;
 	}
 
 	const handleMouseleave = (event: MouseEvent | TouchEvent) => {
@@ -243,20 +225,6 @@
 	const updateNodePosition = (pos: XYPosition, active?: boolean) => {
 		if (selectedNodeIds.length) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
-			console.log("drag");
-			console.log(nodes.map((node) => {
-				if (selected.id === node.id) {
-					return {
-						...node,
-						selected: active ? active : false,
-						position: {
-							x: pos.x - offsetX,
-							y: pos.y - offsetY,
-						}
-					} as NodeData; // Explicitly define the type here
-				}
-				return node;
-			}));
 			nodeStore.set(nodes.map((node) => {
 				if (selected.id === node.id) {
 					return {

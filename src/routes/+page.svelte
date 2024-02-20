@@ -3,7 +3,8 @@
 	import TreeFlow from '$lib/components/TreeFlow/TreeFlow.svelte';
 	import { writable } from 'svelte/store';
 	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
-	import { edgeStore, nodeStore } from '$lib/components/stores';
+	import { edgeStore, nodeStore, sectionHeight } from '$lib/components/stores';
+	import { calculateCanvasSize } from '$lib/util/nodeResizer';
 
 	let treeflow: TreeFlow;
 	let edgeItems: EdgeData[]= [
@@ -134,7 +135,25 @@
 			depth: 1,
 		}
     ] as NodeData[];
-	nodeStore.set(nodeItems);
+
+	const preprocess = (nodes: NodeData[]): NodeData[] => {
+		// if node has children, calculate its size based on children
+		return nodes.map((node) => {
+			if (node.children && node.children.length > 0) {
+				const children = nodes.filter((n) => node.children!.includes(n.id!));
+				const size = calculateCanvasSize(nodes, children.map((n) => n.id!), node.size.width, node.size.height, sectionHeight * 3);
+				node.size = size;
+				return {
+					...node,
+					size,
+				};
+			}
+			else {
+				return node;
+			}
+		});
+	}
+	nodeStore.set(preprocess(nodeItems));
 	edgeStore.set(edgeItems);
 </script>
 

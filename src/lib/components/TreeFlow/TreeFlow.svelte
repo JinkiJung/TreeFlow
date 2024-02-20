@@ -8,8 +8,6 @@
 	import { getEdgeEndpoint, isRightMB, updateAllEdgeEndpoints } from "../types/dom";
 	import { newNode } from "$lib/interaction/newNode";
 	import { DefaultNode } from "../Node";
-	import type { ResizableContainer } from "../Container";
-	import type { Container } from "../types/container";
 	import { NODECANVAS_SURFIX } from "../constant";
     
 	export let width: number = 0;
@@ -27,8 +25,8 @@
 
 	let offsetX = 0;
 	let offsetY = 0;
-	let offsetXPlain = 0;
-	let offsetYPlain = 0;
+	let offsetRawX = 0;
+	let offsetRawY = 0;
 	let offsetWidth = 0;
 	let offsetHeight = 0;
 	let dragNode = false;
@@ -77,6 +75,7 @@
 		offsetY = pos.y - nodeSelected.position.y;
 		document.onmousemove = dragNodeMove;
 		document.onmouseleave = handleMouseleave;
+		document.onmouseup = dragNodeEnd;
 	}
 
 	const dragNodeMove = ( event: MouseEvent | TouchEvent) => {
@@ -87,7 +86,7 @@
 			updateNewEdge(pos);
 		}
 		else if (dragNode) {
-			updateNodePosition(pos, true);
+			updateNodePositionForDrag(pos, true);
 			showParent(event as MouseEvent);
 		}
 	}
@@ -111,16 +110,18 @@
 			}));
 			if (hoveredNodeCanvas) {
 				// get hovered node canvas id 
-				const parentIdForUpdate = hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '') === 'root' ? undefined : hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '');
+				const parentIdToBeUpdated = hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '') === 'root' ? undefined : hoveredNodeCanvas.getAttribute('id')?.replace(NODECANVAS_SURFIX, '');
 				// first fetch parent IDs into array from selected nodes in order to empty children of them
 				const parentIdOutdated = nodes.filter((node) => selectedNodeIds.includes(node.id!)).map((node) => node.parent).pop();
-				if (parentIdForUpdate !== parentIdOutdated){
+				// if parent id is changed, then update the nodes
+				if (parentIdToBeUpdated !== parentIdOutdated){
 					// get current parent node's position if currentParentId is not undefined
-					const parentPositionOutdated = parentIdOutdated ? nodes.filter((node) => parentIdOutdated.includes(node.id!)).pop()?.position : {x: 0, y: 0};
-					const parentPositionForUpdate = parentIdForUpdate ? nodes.filter((node) => parentIdForUpdate === node.id).pop()?.position : {x: 0, y: 0};
-
-					// update the node's parent, if id is root, then parent is undefined, else put the id as parent
+					const parentOutdated = parentIdOutdated ? nodes.filter((node) => parentIdOutdated === node.id).pop() : undefined;
+					const parentToBeUpdated = parentIdToBeUpdated ? nodes.filter((node) => parentIdToBeUpdated === node.id).pop() : undefined;
+					const parentPositionOutdated = aggregateItselfAndParentPosition(parentOutdated);
+					const parentPositionToBeUpdated = aggregateItselfAndParentPosition(parentToBeUpdated);
 					nodeStore.set(nodes.map((node) => {
+						// for parent outdated
 						if (parentIdOutdated && parentIdOutdated.includes(node.id!)) {
 							const children = node.children?.filter((child) => !selectedNodeIds.includes(child));
 							return {
@@ -134,25 +135,27 @@
 									},
 							} as NodeData; // Explicitly define the type here
 						}
-						if (parentIdForUpdate && parentIdForUpdate === node.id) {
+						// for parent for update
+						if (parentIdToBeUpdated && parentIdToBeUpdated === node.id) {
 							return {
 								...node,
 								children: node.children ? [...node.children, ...selectedNodeIds] : selectedNodeIds,
 							} as NodeData; // Explicitly define the type here
 						}
+						// node to be assigned
 						if (selectedNodeIds.includes(node.id!)) {
 							return {
 								...node,
-								position: parentIdForUpdate ?
+								position: parentIdToBeUpdated ?
 									{
-										x: node.position.x + parentPositionOutdated?.x! - parentPositionForUpdate?.x!,
-										y: node.position.y + parentPositionOutdated?.y! - parentPositionForUpdate?.y! - sectionHeight * 2,
+										x: node.position.x + parentPositionOutdated?.x! - parentPositionToBeUpdated?.x!,
+										y: node.position.y + parentPositionOutdated?.y! - parentPositionToBeUpdated?.y!,
 									} :
 									{
 										x: node.position.x + parentPositionOutdated?.x!,
-										y: node.position.y + parentPositionOutdated?.y! + sectionHeight * 2,
-									},	
-								parent: parentIdForUpdate === 'root' ? undefined : parentIdForUpdate,
+										y: node.position.y + parentPositionOutdated?.y!,
+									},
+								parent: parentIdToBeUpdated === 'root' ? undefined : parentIdToBeUpdated,
 							} as NodeData; // Explicitly define the type here
 						}
 						return node;
@@ -166,6 +169,26 @@
 		if (newEdge) {
 			newEdge = null;
 		}
+	}
+
+	// function aggregate all parent's position and return its sum
+	const aggregateItselfAndParentPosition = (node: NodeData | undefined): XYPosition => {
+		if (!node) {
+			return {x: 0, y: 0};
+		}
+		let parent = node.parent;
+		let position = { x: node.position.x, y: node.position.y }; // hard copy
+		while (parent) {
+			let parentNode = nodes.filter((node) => node.id === parent).pop();
+			if (parentNode) {
+				position.x += parentNode.position.x;
+				position.y += parentNode.position.y;
+				parent = parentNode.parent;
+			} else {
+				break;
+			}
+		}
+		return position;
 	}
 
 	const showParent = ( event: MouseEvent) => {
@@ -222,7 +245,7 @@
 		}
 	}
 
-	const updateNodePosition = (pos: XYPosition, active?: boolean) => {
+	const updateNodePositionForDrag = (pos: XYPosition, active?: boolean) => {
 		if (selectedNodeIds.length) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			nodeStore.set(nodes.map((node) => {
@@ -233,7 +256,7 @@
 						position: {
 							x: pos.x - offsetX,
 							y: pos.y - offsetY,
-						}
+						},
 					} as NodeData; // Explicitly define the type here
 				}
 				return node;
@@ -361,9 +384,9 @@
 		let pos = getEventPosition(event.detail.event, containerBounds);
 		offsetX = pos.x - selected.position.x - selected.size.width;
 		offsetY = pos.y - selected.position.y - selected.size.height;
-		offsetYPlain = pos.y;
+		offsetRawY = pos.y;
 		offsetHeight = selected.size.height;
-		offsetXPlain = pos.x;
+		offsetRawX = pos.x;
 		offsetWidth = selected.size.width;
 
 		document.onmousemove = resizeMove;
@@ -380,9 +403,9 @@
 			switch(resizeDirection) {
 				case ResizeDirection.Top:
 					// update node's y and height
-					updateNodePosAndSize(selected, {
+					updateNodeForResize(selected, {
 							width:  selected.size.width,
-							height: offsetHeight - (pos.y - offsetYPlain),
+							height: offsetHeight - (pos.y - offsetRawY),
 						},
 						{
 							x: selected.position.x,
@@ -392,15 +415,15 @@
 					break;
 				case ResizeDirection.Bottom:
 					// update node's height
-					updateNodePosAndSize(selected, {
+					updateNodeForResize(selected, {
 							width:  selected.size.width,
 							height: pos.y - offsetY - selected.position.y,
 						});
 					break;
 				case ResizeDirection.Left:
 					// update node's x and width
-					updateNodePosAndSize(selected, {
-							width:  offsetWidth - (pos.x - offsetXPlain),
+					updateNodeForResize(selected, {
+							width:  offsetWidth - (pos.x - offsetRawX),
 							height: selected.size.height,
 						},
 						{
@@ -411,7 +434,7 @@
 					break;
 				case ResizeDirection.Right:
 					// update node's width
-					updateNodePosAndSize(selected, {
+					updateNodeForResize(selected, {
 							width: pos.x - offsetX - selected.position.x,
 							height: selected.size.height,
 						});
@@ -422,7 +445,7 @@
 		}
 	}
 
-	const updateNodePosAndSize = (selected: NodeData, size: Size, pos?: XYPosition) => {
+	const updateNodeForResize = (selected: NodeData, size: Size, pos?: XYPosition) => {
 		if (selectedNodeIds.length) {
 			nodeStore.set(nodes.map((node) => {
 				if (selected.id === node.id) {
@@ -487,7 +510,6 @@
 						nodeId = {node.id}
 						backgroundColor={nodeBackgroundColor}
 						on:nodedragstart={dragNodeStart}
-						on:nodedragstop={dragNodeEnd}
 						handleMousedown={dragNodeStart}
 						handleMouseup={dragNodeEnd}
 						{linkEdgeStart}

@@ -13,13 +13,13 @@
 	import { DefaultNode } from '.';
 	import { ResizableContainer } from '../Container';
 	import { newNode } from '$lib/interaction/newNode';
+	import { calculateCanvasSize } from '$lib/util/nodeResizer';
 
 	const dispatch = createEventDispatcher<{
 		nodeclick: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodecontextmenu: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodedrag: { node: NodeData; nodes: NodeData[]; event: MouseEvent | TouchEvent };
 		nodedragstart: { node: NodeData; event: MouseEvent | TouchEvent };
-		nodedragstop: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemouseenter: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemouseleave: { node: NodeData; event: MouseEvent | TouchEvent };
 		nodemousemove: { node: NodeData; event: MouseEvent | TouchEvent };
@@ -64,7 +64,6 @@
 	let actValue: string = data.label;
 	let actInput: HTMLInputElement;
 	let expanded: boolean = false;
-	let heightOffset: number = sectionHeight * 2;
 
 	$: {
 		node = nodes.filter((n) => n.id === nodeId).pop()!;
@@ -75,7 +74,7 @@
 
 			hasParent = node.parent !== undefined;
 			x = node.position.x;
-			y = hasParent ? node.position.y + heightOffset : node.position.y;
+			y = node.position.y;
 			width = node.size.width;
 			height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
 			data = node.data;
@@ -86,7 +85,6 @@
 
 	onMount(() => {
 		updateChildren();
-		adjustSize();
 	});
 
 	const updateChildren = () => {
@@ -98,33 +96,10 @@
 	};
 
 	const adjustSize = () => {
-		const size = calculateCanvasSize(children.map((n) => n.id!));
+		const size = calculateCanvasSize(nodes, children.map((n) => n.id!), width, height, sectionHeight * numberOfSections);
 		if (size.width !== node.size.width && size.height !== node.size.height) {
 			nodeStore.set(nodes.map((n) => (n.id === nodeId ? { ...node, size } : n)));
 		}
-	};
-
-	const calculateCanvasSize = (childrenIds: string[]): Size => {
-		if (childrenIds.length === 0) return { width, height };
-
-		const nodePositions = childrenIds!.map((nodeId) => {
-			const node = nodes.filter((n) => n.id === nodeId).pop();
-			if (node)
-				return {
-					x: node.position.x + node.size.width,
-					y: node.position.y + node.size.height
-				};
-			else return { x: 0, y: 0 };
-		});
-
-		const maxX = Math.max(...nodePositions.map((pos) => pos.x));
-		const maxY = Math.max(...nodePositions.map((pos) => pos.y));
-
-		const size = {
-			width: maxX + 20,
-			height: maxY + 40 + sectionHeight * numberOfSections
-		};
-		return size;
 	};
 
 	const onAddChild = () => {
@@ -142,7 +117,6 @@
 	on:click={(event) => dispatch('nodeclick', { node, event })}
 	on:keydown={(event) => {}}
 	on:mousedown={(event) => dispatch('nodedragstart', { node, event })}
-	on:mouseup={(event) => dispatch('nodedragstop', { node, event })}
 	on:mouseenter={(event) => dispatch('nodemouseenter', { node, event })}
 	on:mouseleave={(event) => dispatch('nodemouseleave', { node, event })}
 	on:mousemove={(event) => dispatch('nodemousemove', { node, event })}
@@ -182,7 +156,6 @@
 								nodeId={n.id}
 								{backgroundColor}
 								on:nodedragstart={handleMousedown}
-								on:nodedragstop={handleMouseup}
 								{handleMousedown}
 								{handleMouseup}
 								{linkEdgeStart}

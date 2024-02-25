@@ -28,6 +28,9 @@
         ? 'red'
         : 'black'};"
 >
+    <div style="position: absolute;">
+        <slot />
+    </div>
     <div class="hoverable"
         style="position: absolute; top: 0; left: 0; right: 0; height: {boundary}px; cursor: ns-resize;"
         on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Top, event })}
@@ -44,9 +47,6 @@
         style="position: absolute; top: 0; bottom: 0; right: 0; width: {boundary}px; cursor: ew-resize;"
         on:mousedown={(event) => dispatch('resizestart', { nodeId: owningNode, direction: ResizeDirection.Right, event })}
         role="button" tabindex="0" />
-    <div style="position: absolute;">
-        <slot />
-    </div>
     
 </div>
 

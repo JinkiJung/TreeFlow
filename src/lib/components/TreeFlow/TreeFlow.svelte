@@ -103,7 +103,7 @@
 				if (selectedNodeIds.includes(node.id!)) {
 					return {
 						...node,
-						selected: false,
+						selected: false
 					} as NodeData; // Explicitly define the type here
 				}
 				return node;
@@ -147,15 +147,25 @@
 							return {
 								...node,
 								position: parentIdToBeUpdated ?
-									{
-										x: node.position.x + parentPositionOutdated?.x! - parentPositionToBeUpdated?.x!,
-										y: node.position.y + parentPositionOutdated?.y! - parentPositionToBeUpdated?.y!,
-									} :
+									fitInside(
+										node.position.x + parentPositionOutdated?.x! - parentPositionToBeUpdated?.x!,
+										node.position.y + parentPositionOutdated?.y! - parentPositionToBeUpdated?.y!,
+									) :
 									{
 										x: node.position.x + parentPositionOutdated?.x!,
 										y: node.position.y + parentPositionOutdated?.y!,
 									},
 								parent: parentIdToBeUpdated === 'root' ? undefined : parentIdToBeUpdated,
+							} as NodeData; // Explicitly define the type here
+						}
+						return node;
+					}));
+				} else {
+					nodeStore.set(nodes.map((node) => {
+						if (selectedNodeIds.includes(node.id!)) {
+							return {
+								...node,
+								position: fitInside(node.position.x, node.position.y),
 							} as NodeData; // Explicitly define the type here
 						}
 						return node;
@@ -169,6 +179,14 @@
 		if (newEdge) {
 			newEdge = null;
 		}
+	}
+
+	// if x position is negative, then set it to 0, and if y position is smaller than sectionHeight * 2, then set it to sectionHeight * 2
+	const fitInside = (x: number, y: number): XYPosition => {
+		return {
+			x: x < 0 ? 0 : x,
+			y: y < sectionHeight * 2 ? sectionHeight * 2 : y,
+		};
 	}
 
 	// function aggregate all parent's position and return its sum

@@ -4,7 +4,7 @@
 	import { writable } from 'svelte/store';
 	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
 	import { edgeStore, nodeStore, sectionHeight } from '$lib/components/stores';
-	import { calculateCanvasSize } from '$lib/util/nodeResizer';
+	import { calculateCanvasSize, getSizeWithMinHeight } from '$lib/util/nodeResizer';
 
 	let treeflow: TreeFlow;
 	let edgeItems: EdgeData[]= [
@@ -59,7 +59,7 @@
 			},
 			size: {
 				width: 160,
-				height: 60,
+				height: 80,
 			},
 			data: {
 				label: 'node 2',
@@ -149,7 +149,7 @@
 				};
 			}
 			else {
-				return node;
+				return {...node, size: getSizeWithMinHeight(node.size)};
 			}
 		});
 	}

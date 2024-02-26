@@ -3,7 +3,7 @@
 	import EdgeCanvas from "../Canvas/EdgeCanvas.svelte";
 	import NodeCanvas from "../Canvas/NodeCanvas.svelte";
 	import { Edge } from "../Edge";
-	import { edgeStore, sectionHeight, nodeStore } from "../stores";
+	import { edgeStore, sectionHeight, nodeStore, minNodeHeight, minNodeWidth } from "../stores";
 	import { getEventPosition, type EdgeData, type NodeData, type XYPosition, EdgeLinkTypes, ResizeDirection, type Size } from "../types";
 	import { getEdgeEndpoint, isRightMB, updateAllEdgeEndpoints } from "../types/dom";
 	import { newNode } from "$lib/interaction/newNode";
@@ -27,8 +27,11 @@
 	let offsetY = 0;
 	let offsetRawX = 0;
 	let offsetRawY = 0;
-	let offsetWidth = 0;
-	let offsetHeight = 0;
+	let offsetAbsY = 0;
+	let offsetAbsX = 0;
+	let nodeOrgPosition: XYPosition = {x: 0, y: 0};
+	let nodeOrgSize: Size = {width: 0, height: 0};
+	let parentNodeSizeOfSelected: Size = {width: 0, height: 0};
 	let dragNode = false;
 	let dragEdgeLink = false;
 	let dragContainer = false;
@@ -131,7 +134,7 @@
 									node.size :
 									{
 										width: node.size.width,
-										height: sectionHeight * 4,
+										height: minNodeHeight,
 									},
 							} as NodeData; // Explicitly define the type here
 						}
@@ -176,6 +179,7 @@
 			}
 		}
 		selectedNodeIds = [];
+		parentNodeSizeOfSelected = {width: 0, height: 0};
 		if (newEdge) {
 			newEdge = null;
 		}
@@ -389,6 +393,18 @@
 		}
 	}
 
+	// function that fetches the size of parent node of selected node
+	const getParentSize = (node: NodeData) => {
+		if (node.parent) {
+			const parent = nodes.filter((n) => n.id === node.parent).pop();
+			if (parent) {
+				return parent.size;
+			}
+		}
+		// else fetch canvas size
+		return { width, height };
+	}
+
 	const resizeStart = (event: CustomEvent<{ nodeId: string, direction: ResizeDirection, event: MouseEvent | TouchEvent; }>) => {
 		dragContainer = true;
 
@@ -396,16 +412,19 @@
 		resizeDirection = event.detail.direction;
 		selectedNodeIds = [event.detail.nodeId];
 		let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
-
+		nodeOrgPosition = selected.position;
+		nodeOrgSize = selected.size;
 		containerBounds = container.getBoundingClientRect();
+
+		parentNodeSizeOfSelected = getParentSize(selected); 
 
 		let pos = getEventPosition(event.detail.event, containerBounds);
 		offsetX = pos.x - selected.position.x - selected.size.width;
 		offsetY = pos.y - selected.position.y - selected.size.height;
-		offsetRawY = pos.y;
-		offsetHeight = selected.size.height;
+		offsetRawY = pos.y - selected.position.y;
+		offsetAbsY = pos.y;
+		offsetAbsX = pos.x;
 		offsetRawX = pos.x;
-		offsetWidth = selected.size.width;
 
 		document.onmousemove = resizeMove;
 		//document.onmouseleave = handleMouseleave;
@@ -416,44 +435,62 @@
 		event.stopPropagation();
 		containerBounds = container.getBoundingClientRect();
 		let pos = getEventPosition(event, containerBounds);
+		const currentX = pos.x - offsetRawX;
+		const currentY = pos.y - offsetRawY;
+		const currentWidth = nodeOrgSize.width + (offsetAbsX - pos.x);
+		const currentHeight = nodeOrgSize.height + (offsetAbsY - pos.y);
+		const currentHeightOpposite = nodeOrgSize.height - offsetAbsY + pos.y;
+		const currentWidthOpposite = nodeOrgSize.width - offsetAbsX + pos.x;
+
 		if (dragContainer) {
 			let selected: NodeData = nodes.filter((node) => selectedNodeIds.includes(node.id!)).pop()!;
 			switch(resizeDirection) {
 				case ResizeDirection.Top:
 					// update node's y and height
 					updateNodeForResize(selected, {
-							width:  selected.size.width,
-							height: offsetHeight - (pos.y - offsetRawY),
+							width: selected.size.width,
+							height: currentHeight < minNodeHeight ? minNodeHeight :
+								currentY < 0 ? 
+									nodeOrgPosition.y + nodeOrgSize.height :
+								currentHeight,
 						},
 						{
 							x: selected.position.x,
-							y: pos.y - offsetY - offsetHeight,
+							y: currentY < 0 ? 0 : 
+								currentHeight < minNodeHeight ? nodeOrgPosition.y + nodeOrgSize.height - minNodeHeight:
+									currentY,
 						}
-						);
+					);
 					break;
 				case ResizeDirection.Bottom:
 					// update node's height
 					updateNodeForResize(selected, {
-							width:  selected.size.width,
-							height: pos.y - offsetY - selected.position.y,
+							width: selected.size.width,
+							height: nodeOrgSize.height - offsetAbsY + pos.y < minNodeHeight ? minNodeHeight :
+								currentHeightOpposite + nodeOrgPosition.y > parentNodeSizeOfSelected.height ? parentNodeSizeOfSelected.height - nodeOrgPosition.y :
+								currentHeightOpposite,
 						});
 					break;
 				case ResizeDirection.Left:
 					// update node's x and width
 					updateNodeForResize(selected, {
-							width:  offsetWidth - (pos.x - offsetRawX),
+							width: currentWidth < minNodeWidth ? minNodeWidth :
+							nodeOrgPosition.x + currentX < 0 ? nodeOrgPosition.x + nodeOrgSize.width : currentWidth,
 							height: selected.size.height,
 						},
 						{
-							x: pos.x - offsetX - offsetWidth,
+							x: nodeOrgPosition.x + currentX < 0 ? 0 :
+								currentWidth < minNodeWidth ? nodeOrgPosition.x + nodeOrgSize.width - minNodeWidth : nodeOrgPosition.x + currentX,
 							y: selected.position.y,
 						}
-						);
+					);
 					break;
 				case ResizeDirection.Right:
 					// update node's width
 					updateNodeForResize(selected, {
-							width: pos.x - offsetX - selected.position.x,
+							width: nodeOrgSize.width - offsetAbsX + pos.x < minNodeWidth ? minNodeWidth :
+								currentWidthOpposite + nodeOrgPosition.x > parentNodeSizeOfSelected.width ? parentNodeSizeOfSelected.width - nodeOrgPosition.x :
+								currentWidthOpposite,
 							height: selected.size.height,
 						});
 					break;

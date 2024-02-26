@@ -76,7 +76,7 @@
 			x = node.position.x;
 			y = node.position.y;
 			width = node.size.width;
-			height = node.size.height < sectionHeight * numberOfSections ? sectionHeight * numberOfSections : node.size.height;
+			height = node.size.height;
 			data = node.data;
 			actValue = data.label;
 			selected = node.selected!;

@@ -24,6 +24,7 @@ export const newNode = (): NodeData => {
             connected: false,
             highlighted: false,
             selected: false,
-        }
+        },
+        depth: 0,
     } as NodeData
 };

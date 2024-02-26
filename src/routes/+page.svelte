@@ -3,7 +3,8 @@
 	import TreeFlow from '$lib/components/TreeFlow/TreeFlow.svelte';
 	import { writable } from 'svelte/store';
 	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
-	import { edgeStore, nodeStore } from '$lib/components/stores';
+	import { edgeStore, nodeStore, sectionHeight } from '$lib/components/stores';
+	import { calculateCanvasSize, getSizeWithMinHeight } from '$lib/util/nodeResizer';
 
 	let treeflow: TreeFlow;
 	let edgeItems: EdgeData[]= [
@@ -33,7 +34,8 @@
 				label: 'node 1',
 			},
 			children: [
-				'node4'
+				'node4',
+				'node3'
 			],
 			startLinker: {
 				type: EdgeLinkTypes.Start,
@@ -46,7 +48,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 0,
         },
         {
             id: 'node2',
@@ -56,7 +59,7 @@
 			},
 			size: {
 				width: 160,
-				height: 60,
+				height: 80,
 			},
 			data: {
 				label: 'node 2',
@@ -72,7 +75,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 0,
         },
 		{
             id: 'node3',
@@ -87,6 +91,7 @@
 			data: {
 				label: 'node 3',
 			},
+			parent: 'node1',
 			startLinker: {
 				type: EdgeLinkTypes.Start,
 				connected: false,
@@ -98,7 +103,8 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 0,
         },
 		{
 			id: 'node4',
@@ -125,10 +131,29 @@
 				connected: false,
 				highlighted: false,
 				selected: false,
-			}
+			},
+			depth: 1,
 		}
     ] as NodeData[];
-	nodeStore.set(nodeItems);
+
+	const preprocess = (nodes: NodeData[]): NodeData[] => {
+		// if node has children, calculate its size based on children
+		return nodes.map((node) => {
+			if (node.children && node.children.length > 0) {
+				const children = nodes.filter((n) => node.children!.includes(n.id!));
+				const size = calculateCanvasSize(nodes, children.map((n) => n.id!), node.size.width, node.size.height, sectionHeight * 3);
+				node.size = size;
+				return {
+					...node,
+					size,
+				};
+			}
+			else {
+				return {...node, size: getSizeWithMinHeight(node.size)};
+			}
+		});
+	}
+	nodeStore.set(preprocess(nodeItems));
 	edgeStore.set(edgeItems);
 </script>
 
@@ -146,7 +171,7 @@
 		TreeFlow Svelte Demo
 	</h1>
 	<div class="container" >
-		<TreeFlow bind:this={treeflow} width={600} height={400}/>
+		<TreeFlow bind:this={treeflow} width={800} height={600}/>
 		<button on:click={(e) => treeflow.addNode()}
 		>create new</button>
 	</div>
@@ -165,5 +190,4 @@
 	h1 {
 		width: 100%;
 	}
-
 </style>

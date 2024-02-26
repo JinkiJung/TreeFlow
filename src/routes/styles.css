@@ -113,3 +113,15 @@ button:focus:not(:focus-visible) {
     -o-user-select: none;
     user-select: none;
 }
+
+* {
+	-webkit-box-sizing: content-box;
+	   -moz-box-sizing: content-box;
+			box-sizing: content-box;
+  }
+  *:before,
+  *:after {
+	-webkit-box-sizing: content-box;
+	   -moz-box-sizing: content-box;
+			box-sizing: content-box;
+  }

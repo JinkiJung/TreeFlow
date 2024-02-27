@@ -2,141 +2,29 @@
 <script lang='ts'>
 	import TreeFlow from '$lib/components/TreeFlow/TreeFlow.svelte';
 	import { writable } from 'svelte/store';
-	import { type NodeData, type EdgeData, EdgeLinkTypes } from '$lib/components/types';
 	import { edgeStore, nodeStore, sectionHeight } from '$lib/components/stores';
 	import { calculateCanvasSize, getSizeWithMinHeight } from '$lib/util/nodeResizer';
+	import type { NodeData } from '$lib/components/types';
 
+	
 	let treeflow: TreeFlow;
-	let edgeItems: EdgeData[]= [
-		{
-			id: 'edge1',
-			fromId: 'node1',
-			fromType: EdgeLinkTypes.End,
-			toType: EdgeLinkTypes.Start,
-			toId: 'node2',
-			data: {
-				label: 'edge 1',
-			}
-		}
-	];
-    let nodeItems: NodeData[] = [
-        {
-            id: 'node1',
-            position: {
-				x: 100,
-				y: 100,
-			},
-			size: {
-				width: 160,
-				height: 200,
-			},
-			data: {
-				label: 'node 1',
-			},
-			children: [
-				'node4',
-				'node3'
-			],
-			startLinker: {
-				type: EdgeLinkTypes.Start,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			endLinker: {
-				type: EdgeLinkTypes.End,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			depth: 0,
-        },
-        {
-            id: 'node2',
-            position: {
-				x: 400,
-				y: 100,
-			},
-			size: {
-				width: 160,
-				height: 80,
-			},
-			data: {
-				label: 'node 2',
-			},
-			startLinker: {
-				type: EdgeLinkTypes.Start,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			endLinker: {
-				type: EdgeLinkTypes.End,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			depth: 0,
-        },
-		{
-            id: 'node3',
-            position: {
-				x: 400,
-				y: 200,
-			},
-			size: {
-				width: 160,
-				height: 60,
-			},
-			data: {
-				label: 'node 3',
-			},
-			parent: 'node1',
-			startLinker: {
-				type: EdgeLinkTypes.Start,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			endLinker: {
-				type: EdgeLinkTypes.End,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			depth: 0,
-        },
-		{
-			id: 'node4',
-			position: {
-				x: 100,
-				y: 100,
-			},
-			size: {
-				width: 160,
-				height: 60,
-			},
-			data: {
-				label: 'node 4',
-			},
-			parent: 'node1',
-			startLinker: {
-				type: EdgeLinkTypes.Start,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			endLinker: {
-				type: EdgeLinkTypes.End,
-				connected: false,
-				highlighted: false,
-				selected: false,
-			},
-			depth: 1,
-		}
-    ] as NodeData[];
+	// load nodeItems and edgeItems from sample1.ts and sample2.ts
+	import { nodeItems, edgeItems } from '$lib/data/sample1';
+	import { nodeItems as nodeItems2, edgeItems as edgeItems2 } from '$lib/data/sample2';
 
-	const preprocess = (nodes: NodeData[]): NodeData[] => {
+	// implement changeData function to change the data according to the string parameter
+	const changeData = (data: string) => {
+		if (data === '1') {
+			nodeStore.set(preprocessNodes(nodeItems));
+			edgeStore.set(edgeItems);
+		}
+		else if (data === '2') {
+			nodeStore.set(preprocessNodes(nodeItems2));
+			edgeStore.set(edgeItems2);
+		}
+	}
+
+	const preprocessNodes = (nodes: NodeData[]): NodeData[] => {
 		// if node has children, calculate its size based on children
 		return nodes.map((node) => {
 			if (node.children && node.children.length > 0) {
@@ -153,7 +41,7 @@
 			}
 		});
 	}
-	nodeStore.set(preprocess(nodeItems));
+	nodeStore.set(preprocessNodes(nodeItems));
 	edgeStore.set(edgeItems);
 </script>
 
@@ -172,8 +60,16 @@
 	</h1>
 	<div class="container" >
 		<TreeFlow bind:this={treeflow} width={800} height={600}/>
-		<button on:click={(e) => treeflow.addNode()}
-		>create new</button>
+		<div>
+			<button on:click={(e) => changeData('1')} >data 1</button>
+			<button on:click={(e) => changeData('2')} >data 2</button>
+		</div>
+		<div>
+			<button on:click={(e) => treeflow.addNode()}
+				>add new node</button>	
+		</div>
+		
+
 	</div>
 	
 </section>

@@ -1,8 +1,14 @@
+import type NodeCanvas from "$lib/components/Canvas/NodeCanvas.svelte";
 import { EdgeLinkTypes, type NodeData } from "$lib/components/types"
 
-export const newNode = (): NodeData => {
+export const newNode = (canvas?: NodeCanvas): NodeData => {
     return {
         position: {
+            x: 10,
+            y: 10,
+        },
+        // get absolute position from parent canvas
+        absolutePosition: {
             x: 10,
             y: 10,
         },

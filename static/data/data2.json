@@ -3,8 +3,8 @@
         {
             "id": "edge1",
             "fromId": "node2",
-            "fromType": "edgestart",
-            "toType": "edgeend",
+            "fromType": "edgeend",
+            "toType": "edgestart",
             "toId": "node3",
             "data": {
                 "label": "edge 1"

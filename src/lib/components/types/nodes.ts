@@ -3,6 +3,7 @@ import type { EdgeLinkData, Size, XYPosition } from ".";
 export type NodeData<T = any> = {
     id?: string;
     position: XYPosition;
+    absolutePosition?: XYPosition;
     size: Size;
     data: T;
     depth?: number;

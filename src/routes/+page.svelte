@@ -6,6 +6,7 @@
 	import { calculateCanvasSize, getSizeWithMinHeight } from '$lib/util/nodeResizer';
 	import type { NodeData } from '$lib/components/types';
 	import { onMount } from 'svelte';
+	import { updateAllEdgeEndpoints } from '$lib/components/types/dom';
 
 	
 	let treeflow: TreeFlow;
@@ -30,9 +31,9 @@
 	const loadJsonData = async (fileName: string) => {
 		const res = await fetch(fileName);
 		const data = await res.json();
-		console.log(data);
-		nodeStore.set(preprocessNodes(data.nodes));
-		edgeStore.set(data.edges);
+		const nodes = preprocessNodes(data.nodes);
+		nodeStore.set(nodes);
+		edgeStore.set(updateAllEdgeEndpoints(data.edges, nodes));
 	}
 
 	const preprocessNodes = (nodes: NodeData[]): NodeData[] => {

@@ -43,27 +43,17 @@
 	const unsubscribeNodeStore = nodeStore.subscribe((value) => {
 		nodes = value;
 		// TODO: OPTIMIZED: if a node without edge is moved
-		if (edges && edges.length) {
-			const updated = updateAllEdgeEndpoints(edges, nodes);
-			edgeStore.set(updated);
-		}
+		edgeStore.set(edges);
 	});
 
 	const unsubscribeEdgeStore = edgeStore.subscribe((value) => {
-		edges = value;
+		edges = updateAllEdgeEndpoints(value, nodes);
 	});
 
 	onDestroy(() => {
 		unsubscribeNodeStore();
 		unsubscribeEdgeStore();
 	});
-
-	onMount(() => {
-        if (edges && nodes) {
-            const updated = updateAllEdgeEndpoints(edges, nodes);
-			edgeStore.set(updated);
-        }
-    });
 
 	const dragNodeStart = (event: CustomEvent<{ node: NodeData; event: MouseEvent | TouchEvent; }>) => {
 		event.detail.event.stopPropagation();
@@ -549,14 +539,6 @@
 
 <div>
 	<div bind:this={container} style="position: relative; width: {width}px; height: {height}px;">
-		<EdgeCanvas {width} {height} hasBackground={true}>
-			{#each edges as edge}
-				<Edge {edge} />
-			{/each}
-			{#if newEdge}
-				<Edge edge={newEdge} />
-			{/if}
-		</EdgeCanvas>
 		<NodeCanvas backgroundColor={nodeCanvasColor} owningNode={'root'} {width} {height}>
 			{#each nodes as node}
 				{#if node.parent === undefined}
@@ -576,5 +558,13 @@
 				{/if}
 			{/each}
 		</NodeCanvas>
+		<EdgeCanvas {width} {height} hasBackground={false}>
+			{#each edges as edge}
+				<Edge {edge} />
+			{/each}
+			{#if newEdge}
+				<Edge edge={newEdge} />
+			{/if}
+		</EdgeCanvas>
 	</div>
 </div>

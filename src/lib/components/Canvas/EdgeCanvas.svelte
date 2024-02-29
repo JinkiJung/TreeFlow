@@ -4,7 +4,7 @@
   export let hasBackground = false;
 </script>
 
-<svg style="position: absolute; top: 0; left: 0; width: {width}px; height: {height}px;" xmlns="http://www.w3.org/2000/svg">
+<svg style="position: absolute; top: 0; left: 0; width: {width}px; height: {height}px; pointer-events: none;" xmlns="http://www.w3.org/2000/svg">
     <defs>
       {#if hasBackground}
         <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">

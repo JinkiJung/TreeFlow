@@ -3,7 +3,8 @@
 	import type { EdgeData, XYPosition } from '../types';
     
     export let edge: EdgeData;
-    
+    let path: any;
+
     let x1 = edge.from?.x!;
     let y1 = edge.from?.y!;
     let x2 = edge.to?.x!;
@@ -33,7 +34,6 @@
             */
         }
     }
-    let path: any;
 
     onMount(() => {
         if (edge.from && edge.to) {

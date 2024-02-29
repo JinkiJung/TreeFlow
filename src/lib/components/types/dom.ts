@@ -34,10 +34,8 @@ export const getEdgeEndpoint = (node: NodeData, type: EdgeLinkTypes) => {
 };
 
 export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): EdgeData[] => {
-  for (const edge of edges) {
-
-    /* TODO: need to deal with situations when it is undefined
-    */ 
+  if (!edges || !nodes) return [];
+  return edges.map((edge) => {
     if (edge.fromId && edge.fromType) {
       const node = nodes.find((n) => n.id === edge.fromId);
       if (node) {
@@ -53,8 +51,8 @@ export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): Ed
         edge.to = endpoint;
       }
     }
-  }
-  return edges;
+    return edge;
+  });
 };
 
 export const isRightMB = (event: MouseEvent) => {

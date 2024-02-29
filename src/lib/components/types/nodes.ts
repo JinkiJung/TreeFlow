@@ -3,6 +3,7 @@ import type { EdgeLinkData, Size, XYPosition } from ".";
 export type NodeData<T = any> = {
     id?: string;
     position: XYPosition;
+    absolutePosition?: XYPosition;
     size: Size;
     data: T;
     depth?: number;
@@ -34,6 +35,6 @@ export type NodeDragItem = {
   };
 
 export enum EdgeLinkTypes {
-    Start = 'start',
-    End = 'end',
+    Start = 'edgestart',
+    End = 'edgeend',
 };

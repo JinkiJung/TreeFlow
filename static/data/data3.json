@@ -1,0 +1,95 @@
+{
+    "edges": [
+    ],
+    "nodes": [
+        {
+            "id": "node1",
+            "position": {
+                "x": 100,
+                "y": 100
+            },
+            "size": {
+                "width": 260,
+                "height": 300
+            },
+            "data": {
+                "label": "node 1"
+            },
+            "children": [
+                "node2"
+            ],
+            "startLinker": {
+                "type": "edgestart",
+                "connected": false,
+                "highlighted": false,
+                "selected": false
+            },
+            "endLinker": {
+                "type": "edgeend",
+                "connected": false,
+                "highlighted": false,
+                "selected": false
+            },
+            "depth": 0
+        },
+        {
+            "id": "node2",
+            "position": {
+                "x": 50,
+                "y": 50
+            },
+            "size": {
+                "width": 160,
+                "height": 80
+            },
+            "data": {
+                "label": "node 2"
+            },
+            "children": [
+                "node3"
+            ],
+            "parent": "node1",
+            "startLinker": {
+                "type": "edgestart",
+                "connected": false,
+                "highlighted": false,
+                "selected": false
+            },
+            "endLinker": {
+                "type": "edgeend",
+                "connected": false,
+                "highlighted": false,
+                "selected": false
+            },
+            "depth": 0
+        },
+        {
+            "id": "node3",
+            "position": {
+                "x": 50,
+                "y": 50
+            },
+            "size": {
+                "width": 160,
+                "height": 60
+            },
+            "data": {
+                "label": "node 3"
+            },
+            "parent": "node2",
+            "startLinker": {
+                "type": "edgestart",
+                "connected": false,
+                "highlighted": false,
+                "selected": false
+            },
+            "endLinker": {
+                "type": "edgeend",
+                "connected": false,
+                "highlighted": false,
+                "selected": false
+            },
+            "depth": 0
+        }
+    ]
+}

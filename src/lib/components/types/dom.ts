@@ -1,4 +1,4 @@
-import { EdgeLinkTypes, type NodeData, type EdgeData } from ".";
+import { EdgeLinkTypes, type NodeData, type EdgeData, type XYPosition } from ".";
 import { sectionHeight } from "../stores";
 
 export const isMouseEvent = (event: MouseEvent | TouchEvent): event is MouseEvent => 'clientX' in event;
@@ -17,13 +17,17 @@ export const getEventPosition = (event: MouseEvent | TouchEvent, bounds?: DOMRec
 export const getEdgeEndpoint = (node: NodeData, type: EdgeLinkTypes) => {
   if (type === EdgeLinkTypes.Start) {
     return {
-      x: node.position.x + sectionHeight / 2,
-      y: node.position.y + sectionHeight / 2,
+      x: node.absolutePosition!.x + sectionHeight / 2,
+      y: node.absolutePosition!.y + sectionHeight / 2,
+      //x: node.position.x + sectionHeight / 2,
+      //y: node.position.y + sectionHeight / 2,
     };
   } else if (type === EdgeLinkTypes.End) {
     return {
-      x: node.position.x + node.size.width - sectionHeight / 2,
-      y: node.position.y + node.size.height - sectionHeight / 2,
+      x: node.absolutePosition!.x + node.size.width - sectionHeight / 2,
+      y: node.absolutePosition!.y + node.size.height - sectionHeight / 2,
+      //x: node.position.x + node.size.width - sectionHeight / 2,
+      //y: node.position.y + node.size.height - sectionHeight / 2,
     };
   } else {
     return {
@@ -34,10 +38,8 @@ export const getEdgeEndpoint = (node: NodeData, type: EdgeLinkTypes) => {
 };
 
 export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): EdgeData[] => {
-  for (const edge of edges) {
-
-    /* TODO: need to deal with situations when it is undefined
-    */ 
+  if (!edges || !nodes) return [];
+  return edges.map((edge) => {
     if (edge.fromId && edge.fromType) {
       const node = nodes.find((n) => n.id === edge.fromId);
       if (node) {
@@ -53,8 +55,8 @@ export const updateAllEdgeEndpoints = (edges: EdgeData[], nodes: NodeData[]): Ed
         edge.to = endpoint;
       }
     }
-  }
-  return edges;
+    return edge;
+  });
 };
 
 export const isRightMB = (event: MouseEvent) => {

@@ -1,48 +1,42 @@
 
 <script lang='ts'>
 	import TreeFlow from '$lib/components/TreeFlow/TreeFlow.svelte';
-	import { writable } from 'svelte/store';
-	import { edgeStore, nodeStore, sectionHeight } from '$lib/components/stores';
-	import { calculateCanvasSize, getSizeWithMinHeight } from '$lib/util/nodeResizer';
-	import type { NodeData } from '$lib/components/types';
+	import { edgeStore, nodeStore } from '$lib/components/stores';
+	import { onMount } from 'svelte';
+	import { updateAllEdgeEndpoints } from '$lib/components/types/dom';
+	import { preprocessNodes } from '$lib/components/types/utils';
 
 	
 	let treeflow: TreeFlow;
-	// load nodeItems and edgeItems from sample1.ts and sample2.ts
-	import { nodeItems, edgeItems } from '$lib/data/sample1';
-	import { nodeItems as nodeItems2, edgeItems as edgeItems2 } from '$lib/data/sample2';
 
 	// implement changeData function to change the data according to the string parameter
 	const changeData = (data: string) => {
 		if (data === '1') {
-			nodeStore.set(preprocessNodes(nodeItems));
-			edgeStore.set(edgeItems);
+			loadJsonData('data/data1.json');
 		}
 		else if (data === '2') {
-			nodeStore.set(preprocessNodes(nodeItems2));
-			edgeStore.set(edgeItems2);
+			loadJsonData('data/data2.json');
+		}
+		else if (data === '3') {
+			loadJsonData('data/data3.json');
+		}
+		else if (data === '4') {
+			loadJsonData('data/data4.json');
 		}
 	}
 
-	const preprocessNodes = (nodes: NodeData[]): NodeData[] => {
-		// if node has children, calculate its size based on children
-		return nodes.map((node) => {
-			if (node.children && node.children.length > 0) {
-				const children = nodes.filter((n) => node.children!.includes(n.id!));
-				const size = calculateCanvasSize(nodes, children.map((n) => n.id!), node.size.width, node.size.height, sectionHeight * 3);
-				node.size = size;
-				return {
-					...node,
-					size,
-				};
-			}
-			else {
-				return {...node, size: getSizeWithMinHeight(node.size)};
-			}
-		});
+	// load data from json files and convert it to NodeData and EdgeData and store it to nodeStore and edgeStore
+	const loadJsonData = async (fileName: string) => {
+		const res = await fetch(fileName);
+		const data = await res.json();
+		const nodes = preprocessNodes(data.nodes);
+		nodeStore.set(nodes);
+		edgeStore.set(updateAllEdgeEndpoints(data.edges, nodes));
 	}
-	nodeStore.set(preprocessNodes(nodeItems));
-	edgeStore.set(edgeItems);
+	
+	onMount(() => {
+		loadJsonData('data/data1.json');
+	});
 </script>
 
 <svelte:head>
@@ -61,8 +55,10 @@
 	<div class="container" >
 		<TreeFlow bind:this={treeflow} width={800} height={600}/>
 		<div>
-			<button on:click={(e) => changeData('1')} >data 1</button>
-			<button on:click={(e) => changeData('2')} >data 2</button>
+			<button on:click={(e) => changeData('1')} >Sequence</button>
+			<button on:click={(e) => changeData('2')} >Sequence in a layer</button>
+			<button on:click={(e) => changeData('3')} >Sequence in two layers</button>
+			<button on:click={(e) => changeData('4')} >Mixed</button>
 		</div>
 		<div>
 			<button on:click={(e) => treeflow.addNode()}

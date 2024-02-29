@@ -34,6 +34,6 @@ export type NodeDragItem = {
   };
 
 export enum EdgeLinkTypes {
-    Start = 'start',
-    End = 'end',
+    Start = 'edgestart',
+    End = 'edgeend',
 };
